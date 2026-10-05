@@ -5,14 +5,14 @@ import { useLanguage } from "@/context/LanguageContext";
 import {
   ClipboardList,
   FileStack,
+  Folders,
   LayoutDashboard,
   Receipt,
-  ScatterChart,
   Wallet,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const icons = [ScatterChart, Receipt, Wallet, ClipboardList, LayoutDashboard, FileStack];
+const icons = [Folders, Receipt, Wallet, ClipboardList, LayoutDashboard, FileStack];
 
 export function ProblemSection() {
   const { t } = useLanguage();

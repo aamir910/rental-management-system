@@ -7,7 +7,6 @@ import {
   Building2,
   CreditCard,
   FileText,
-  Home,
   Receipt,
   UserRound,
   Wallet,
