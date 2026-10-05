@@ -23,8 +23,8 @@ export function TenantPreview() {
             {t.tenant.steps.map((step, i) => (
               <div key={step.num} className="flex w-full max-w-md flex-col items-center">
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={false}
+                  whileInView={{ x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.12 }}
                   className="glass flex w-full items-center gap-4 rounded-2xl p-4"

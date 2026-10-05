@@ -26,8 +26,8 @@ export function SolutionSection() {
               {t.solution.beforeItems.map((item, i) => (
                 <motion.span
                   key={item}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  initial={false}
+                  whileInView={{ scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
                   className="rounded-full border border-red/30 bg-red/10 px-3.5 py-1.5 text-sm text-red/90"
@@ -40,7 +40,7 @@ export function SolutionSection() {
         </Reveal>
 
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={false}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           className="flex flex-col items-center gap-2 text-violet-soft"
@@ -63,8 +63,8 @@ export function SolutionSection() {
               {t.solution.afterItems.map((item, i) => (
                 <motion.span
                   key={item}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  initial={false}
+                  whileInView={{ scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
                   className="rounded-full border border-emerald/30 bg-emerald/10 px-3.5 py-1.5 text-sm text-emerald"

@@ -2,18 +2,26 @@
 
 import { useLanguage } from "@/context/LanguageContext";
 
-export function LanguageSwitcher() {
+type Props = {
+  className?: string;
+};
+
+export function LanguageSwitcher({ className = "" }: Props) {
   const { lang, setLang } = useLanguage();
 
   return (
-    <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-0.5 text-xs font-medium">
+    <div
+      className={`inline-flex items-center rounded-full border border-white/20 bg-navy/80 p-1 text-xs font-semibold shadow-lg shadow-black/20 backdrop-blur-md ${className}`}
+      role="group"
+      aria-label="Language switcher"
+    >
       <button
         type="button"
         onClick={() => setLang("en")}
-        className={`rounded-full px-3 py-1.5 transition-colors ${
+        className={`min-w-[2.75rem] rounded-full px-3 py-1.5 transition-colors ${
           lang === "en"
-            ? "bg-violet text-white shadow-sm"
-            : "text-gray-muted hover:text-white"
+            ? "bg-violet text-white"
+            : "text-white/70 hover:text-white"
         }`}
         aria-pressed={lang === "en"}
       >
@@ -22,10 +30,10 @@ export function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setLang("ur")}
-        className={`rounded-full px-3 py-1.5 transition-colors ${
+        className={`min-w-[3.25rem] rounded-full px-3 py-1.5 transition-colors ${
           lang === "ur"
-            ? "bg-violet text-white shadow-sm"
-            : "text-gray-muted hover:text-white"
+            ? "bg-violet text-white"
+            : "text-white/70 hover:text-white"
         }`}
         aria-pressed={lang === "ur"}
       >

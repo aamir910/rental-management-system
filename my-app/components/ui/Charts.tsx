@@ -48,8 +48,8 @@ export function FakeBarChart({
   return (
     <div ref={ref} className={`flex h-36 items-end gap-2 sm:gap-3 ${className}`}>
       {data.map((d, i) => (
-        <div key={d.label} className="flex flex-1 flex-col items-center gap-1.5">
-          <div className="flex h-28 w-full items-end justify-center gap-0.5">
+        <div key={d.label} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+          <div className="flex w-full flex-1 items-end justify-center gap-0.5">
             <motion.div
               className="w-[45%] rounded-t-sm bg-emerald/80"
               initial={{ height: 0 }}
@@ -63,7 +63,7 @@ export function FakeBarChart({
               transition={{ duration: 0.7, delay: i * 0.06 + 0.05, ease: "easeOut" }}
             />
           </div>
-          <span className="text-[10px] text-gray-muted">{d.label}</span>
+          <span className="shrink-0 text-[10px] text-gray-muted">{d.label}</span>
         </div>
       ))}
     </div>

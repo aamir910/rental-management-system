@@ -57,6 +57,18 @@ body {
   font-family: var(--font-instrument), Georgia, serif;
 }
 
+.font-urdu,
+.font-urdu .font-display {
+  font-family: var(--font-urdu), "Noto Nastaliq Urdu", "Segoe UI", Tahoma, sans-serif;
+  line-height: 1.9;
+}
+
+.font-urdu h1,
+.font-urdu h2,
+.font-urdu h3 {
+  line-height: 1.8;
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -87,10 +99,11 @@ body {
 }
 
 .text-gradient {
+  color: #ffffff;
   background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #a78bfa 100%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .section-light {

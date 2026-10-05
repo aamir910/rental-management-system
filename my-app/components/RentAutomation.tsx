@@ -23,8 +23,8 @@ export function RentAutomation() {
           {t.automation.steps.map((step, i) => (
             <div key={step} className="flex flex-1 flex-col items-center">
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={false}
+                whileInView={{ scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-2 border-violet bg-white text-sm font-bold text-violet shadow-md"
@@ -35,8 +35,8 @@ export function RentAutomation() {
                 <div className="pointer-events-none absolute top-7 hidden h-0.5 bg-violet/30 md:block" />
               )}
               <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={false}
+                whileInView={{ y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 + 0.05 }}
                 className="mt-3 text-center text-xs font-medium text-ink sm:text-sm"

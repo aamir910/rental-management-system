@@ -6,6 +6,7 @@ import { CTA } from "@/components/CTA";
 import { DashboardPreview } from "@/components/DashboardPreview";
 import { Features } from "@/components/Features";
 import { FinancePreview } from "@/components/FinancePreview";
+import { FloatingLanguageToggle } from "@/components/FloatingLanguageToggle";
 import { Footer } from "@/components/Footer";
 import { Hero } from "@/components/Hero";
 import { HouseholdPreview } from "@/components/HouseholdPreview";
@@ -23,6 +24,7 @@ export default function Home() {
   return (
     <LanguageProvider>
       <Navbar />
+      <FloatingLanguageToggle />
       <main>
         <Hero />
         <ProblemSection />

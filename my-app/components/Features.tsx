@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { motion } from "framer-motion";
 import {
   Building2,
+  CircleDollarSign,
   CreditCard,
   FileText,
   Receipt,
@@ -22,7 +23,7 @@ const icons = [
   Receipt,
   CreditCard,
   BarChart3,
-  Wallet,
+  CircleDollarSign,
   Package,
 ];
 

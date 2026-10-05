@@ -16,41 +16,22 @@ export function Hero() {
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-10">
         <div>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div>
             <Badge>
               <Sparkles size={12} />
               {t.hero.badge}
             </Badge>
-          </motion.div>
+          </div>
 
-          <motion.h1
-            className="font-display mt-6 text-4xl leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.08 }}
-          >
+          <h1 className="font-display mt-6 text-4xl leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl">
             <span className="text-gradient">{t.hero.heading}</span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            className="mt-5 max-w-xl text-base leading-relaxed text-gray-muted sm:text-lg"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.16 }}
-          >
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-gray-muted sm:text-lg">
             {t.hero.supporting}
-          </motion.p>
+          </p>
 
-          <motion.div
-            className="mt-8 flex flex-wrap items-center gap-3"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.24 }}
-          >
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
               href="#features"
               className="inline-flex items-center gap-2 rounded-full bg-violet px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-violet/30 transition hover:bg-violet-soft"
@@ -64,16 +45,11 @@ export function Hero() {
             >
               {t.hero.ctaSecondary}
             </a>
-          </motion.div>
+          </div>
 
-          <motion.p
-            className="mt-6 text-xs font-medium uppercase tracking-[0.2em] text-violet-soft/80"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
+          <p className="mt-6 text-xs font-medium uppercase tracking-[0.2em] text-violet-soft/80">
             {t.hero.label}
-          </motion.p>
+          </p>
         </div>
 
         <Reveal delay={0.15}>
@@ -97,9 +73,10 @@ export function Hero() {
                   <motion.div
                     key={stat.label}
                     className="rounded-xl border border-white/8 bg-white/5 p-3.5"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08 }}
+                    initial={false}
+                    whileInView={{ y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.05 * i }}
                   >
                     <p className="text-[11px] text-gray-muted">{stat.label}</p>
                     <p

@@ -1,8 +1,128 @@
 export type Lang = "en" | "ur";
 
-export type TranslationKeys = typeof translations.en;
+type NavKeys = {
+  home: string;
+  why: string;
+  features: string;
+  how: string;
+  future: string;
+  explore: string;
+};
 
-export const translations = {
+type Item = { title: string; desc: string };
+type Step = { num: string; title: string };
+type Phase = { phase: string; title: string };
+
+export type TranslationKeys = {
+  nav: NavKeys;
+  hero: {
+    badge: string;
+    heading: string;
+    supporting: string;
+    ctaPrimary: string;
+    ctaSecondary: string;
+    label: string;
+    dashboardTitle: string;
+    properties: string;
+    activeTenants: string;
+    monthlyRent: string;
+    pendingRent: string;
+    todayIncome: string;
+    todayExpenses: string;
+  };
+  problem: { heading: string; items: Item[] };
+  solution: {
+    heading: string;
+    before: string;
+    beforeItems: string[];
+    after: string;
+    afterItems: string[];
+  };
+  features: { heading: string; items: Item[] };
+  finance: {
+    heading: string;
+    todaySummary: string;
+    income: string;
+    expenses: string;
+    netBalance: string;
+  };
+  household: {
+    heading: string;
+    purchaseValue: string;
+    currentValue: string;
+    condition: string;
+  };
+  tenant: {
+    heading: string;
+    steps: Step[];
+    tenantId: string;
+    property: string;
+    monthlyRent: string;
+    status: string;
+  };
+  approval: {
+    heading: string;
+    application: string;
+    applicationStatus: string;
+    approved: string;
+    reject: string;
+    requestChanges: string;
+    approve: string;
+  };
+  automation: { heading: string; desc: string; steps: string[] };
+  invoice: {
+    heading: string;
+    title: string;
+    tenant: string;
+    property: string;
+    billingMonth: string;
+    monthlyRent: string;
+    utilities: string;
+    total: string;
+    dueDate: string;
+    status: string;
+    pdfBadge: string;
+  };
+  dashboard: {
+    heading: string;
+    title: string;
+    properties: string;
+    activeTenants: string;
+    occupiedUnits: string;
+    expectedRent: string;
+    collected: string;
+    pending: string;
+    todayIncome: string;
+    todayExpenses: string;
+    todayBalance: string;
+    incomeChart: string;
+    expenseChart: string;
+    rentChart: string;
+    pendingList: string;
+  };
+  comingSoon: { heading: string; badge: string; items: Item[] };
+  why: { heading: string; items: Item[] };
+  roadmap: { heading: string; phases: Phase[] };
+  cta: {
+    heading: string;
+    text: string;
+    primary: string;
+    secondary: string;
+  };
+  footer: {
+    tagline1: string;
+    tagline2: string;
+    tagline3: string;
+    fullName: string;
+    copyright: string;
+    home: string;
+    features: string;
+    how: string;
+    comingSoon: string;
+  };
+};
+
+export const translations: Record<Lang, TranslationKeys> = {
   en: {
     nav: {
       home: "Home",
@@ -587,4 +707,4 @@ export const translations = {
       comingSoon: "جلد آرہا ہے",
     },
   },
-} as const;
+};

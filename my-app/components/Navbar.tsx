@@ -73,14 +73,17 @@ export function Navbar() {
           </a>
         </div>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-white lg:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Close menu" : "Open menu"}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-white"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Close menu" : "Open menu"}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -102,12 +105,11 @@ export function Navbar() {
                   {t.nav[link.key]}
                 </a>
               ))}
-              <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-4">
-                <LanguageSwitcher />
+              <div className="mt-3 border-t border-white/10 pt-4">
                 <a
                   href="#features"
                   onClick={() => setOpen(false)}
-                  className="rounded-full bg-violet px-4 py-2 text-sm font-medium text-white"
+                  className="inline-flex rounded-full bg-violet px-4 py-2 text-sm font-medium text-white"
                 >
                   {t.nav.explore}
                 </a>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
+import { Instrument_Serif, Noto_Nastaliq_Urdu, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -15,6 +15,13 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 });
 
+const notoNastaliq = Noto_Nastaliq_Urdu({
+  variable: "--font-urdu",
+  subsets: ["arabic"],
+  weight: "400",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Yasin RMS — Yasin Rental Management System",
   description:
@@ -25,7 +32,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${plusJakarta.variable} ${instrumentSerif.variable} h-full antialiased`}
+      dir="ltr"
+      className={`${plusJakarta.variable} ${instrumentSerif.variable} ${notoNastaliq.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full font-sans">{children}</body>
