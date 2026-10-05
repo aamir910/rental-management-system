@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #0b1220;
+  --navy-soft: #121a2b;
+  --navy-mid: #1a2438;
+  --surface: #f7f8fb;
+  --surface-elevated: #ffffff;
+  --gray-soft: #e8ecf3;
+  --gray-muted: #8b95a8;
+  --gray-text: #5a6478;
+  --ink: #0f172a;
+  --violet: #7c5cfc;
+  --violet-soft: #9b85ff;
+  --violet-glow: rgba(124, 92, 252, 0.25);
+  --emerald: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --background: #0b1220;
+  --foreground: #f7f8fb;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-navy-mid: var(--navy-mid);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-gray-soft: var(--gray-soft);
+  --color-gray-muted: var(--gray-muted);
+  --color-gray-text: var(--gray-text);
+  --color-ink: var(--ink);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-emerald: var(--emerald);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-plus-jakarta);
+  --font-display: var(--font-instrument);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--navy);
+  color: var(--foreground);
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-instrument), Georgia, serif;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.gradient-mesh {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 92, 252, 0.35), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(16, 185, 129, 0.12), transparent 45%),
+    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(124, 92, 252, 0.15), transparent 50%),
+    var(--navy);
+}
+
+.gradient-cta {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(124, 92, 252, 0.3), transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(16, 185, 129, 0.1), transparent 50%),
+    var(--navy-soft);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-light {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.section-dark {
+  background: var(--navy);
+  color: var(--foreground);
+}
+
+.section-mid {
+  background: var(--navy-soft);
+  color: var(--foreground);
+}
+
+::selection {
+  background: rgba(124, 92, 252, 0.35);
+  color: white;
+}
