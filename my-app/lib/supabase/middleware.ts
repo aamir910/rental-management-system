@@ -1,32 +1,29 @@
 import { createServerClient } from "@supabase/ssr";
+import { getSupabaseEnv, isSupabaseEnvValid } from "@/lib/supabase/env";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const { url, anonKey } = getSupabaseEnv();
 
-  const urlValid = !!url && /^https?:\/\//i.test(url);
-
-  if (!urlValid || !key) {
+  if (!isSupabaseEnvValid(url, anonKey)) {
     if (
       request.nextUrl.pathname.startsWith("/admin") ||
       request.nextUrl.pathname === "/login"
     ) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/login";
-      redirectUrl.searchParams.set("error", "missing_env");
-      // Avoid redirect loop on /login
       if (request.nextUrl.pathname === "/login") {
         return supabaseResponse;
       }
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      redirectUrl.searchParams.set("error", "missing_env");
       return NextResponse.redirect(redirectUrl);
     }
     return supabaseResponse;
   }
 
-  const supabase = createServerClient(url, key, {
+  const supabase = createServerClient(url, anonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
