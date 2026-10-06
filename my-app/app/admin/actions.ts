@@ -1,10 +1,20 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { RentStatus, TenantStatus } from "@/lib/types";
+import type {
+  ReminderFrequency,
+  RentStatus,
+  TenantStatus,
+  UtilityBillStatus,
+  UtilityType,
+} from "@/lib/types";
 import { monthInputToBillingDate } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+function revalidateHome() {
+  revalidatePath("/admin/home");
+}
 
 export async function signOut() {
   const supabase = await createClient();
@@ -147,4 +157,136 @@ export async function generateMonthRents(monthValue: string) {
   revalidatePath("/admin");
   revalidatePath("/admin/rents");
   return { success: true, created: data as number };
+}
+
+export async function createUtilityBill(formData: FormData) {
+  const supabase = await createClient();
+
+  const tenantId = String(formData.get("tenant_id") || "").trim();
+  const utilityType = String(formData.get("utility_type") || "") as UtilityType;
+  const monthValue = String(formData.get("month") || "").trim();
+  const amount = Number(formData.get("amount") || 0);
+  const dueDate = String(formData.get("due_date") || "").trim() || null;
+  const referenceSnapshot =
+    String(formData.get("reference_snapshot") || "").trim() || null;
+  const notes = String(formData.get("notes") || "").trim() || null;
+  const status = (String(formData.get("status") || "pending") as UtilityBillStatus);
+
+  if (!tenantId || !utilityType || !monthValue) {
+    return { error: "Tenant, utility type, and month are required." };
+  }
+
+  if (utilityType !== "electricity" && utilityType !== "gas") {
+    return { error: "Invalid utility type." };
+  }
+
+  const billingMonth = monthInputToBillingDate(monthValue);
+
+  let ref = referenceSnapshot;
+  if (!ref) {
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("electricity_ref, gas_ref")
+      .eq("id", tenantId)
+      .single();
+    ref =
+      utilityType === "electricity"
+        ? tenant?.electricity_ref ?? null
+        : tenant?.gas_ref ?? null;
+  }
+
+  const { error } = await supabase.from("utility_bills").insert({
+    tenant_id: tenantId,
+    utility_type: utilityType,
+    billing_month: billingMonth,
+    amount,
+    due_date: dueDate,
+    status,
+    reference_snapshot: ref,
+    notes,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidateHome();
+  return { success: true };
+}
+
+export async function updateUtilityBillStatus(
+  billId: string,
+  status: UtilityBillStatus
+) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("utility_bills")
+    .update({ status })
+    .eq("id", billId);
+
+  if (error) return { error: error.message };
+
+  revalidateHome();
+  return { success: true };
+}
+
+export async function deleteUtilityBill(billId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("utility_bills").delete().eq("id", billId);
+
+  if (error) return { error: error.message };
+
+  revalidateHome();
+  return { success: true };
+}
+
+export async function createReminder(formData: FormData) {
+  const supabase = await createClient();
+
+  const title = String(formData.get("title") || "").trim();
+  const body = String(formData.get("body") || "").trim() || null;
+  const frequency = String(formData.get("frequency") || "") as ReminderFrequency;
+  const nextDueDate = String(formData.get("next_due_date") || "").trim();
+
+  if (!title || !frequency || !nextDueDate) {
+    return { error: "Title, frequency, and next due date are required." };
+  }
+
+  if (!["daily", "weekly", "monthly"].includes(frequency)) {
+    return { error: "Invalid frequency." };
+  }
+
+  const { error } = await supabase.from("reminders").insert({
+    title,
+    body,
+    frequency,
+    next_due_date: nextDueDate,
+    is_done: false,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidateHome();
+  return { success: true };
+}
+
+export async function toggleReminderDone(reminderId: string, isDone: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("reminders")
+    .update({ is_done: isDone })
+    .eq("id", reminderId);
+
+  if (error) return { error: error.message };
+
+  revalidateHome();
+  return { success: true };
+}
+
+export async function deleteReminder(reminderId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("reminders").delete().eq("id", reminderId);
+
+  if (error) return { error: error.message };
+
+  revalidateHome();
+  return { success: true };
 }

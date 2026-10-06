@@ -29,3 +29,7 @@ If you already ran `schema.sql` before utility fields were added, also run:
 [`migration_add_utility_refs.sql`](./migration_add_utility_refs.sql)
 
 That adds `electricity_ref` and `gas_ref` on `tenants`.
+
+For the Admin Home page (utility bills + reminders), also run:
+
+[`migration_home_utilities_reminders.sql`](./migration_home_utilities_reminders.sql)

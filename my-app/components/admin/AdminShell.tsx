@@ -3,6 +3,7 @@
 import { signOut } from "@/app/admin/actions";
 import {
   Building2,
+  Home,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -15,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const links = [
+  { href: "/admin/home", label: "Home", icon: Home },
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/tenants", label: "Tenants", icon: Users },
   { href: "/admin/rents", label: "Monthly Rents", icon: Receipt },
@@ -32,6 +34,7 @@ export function AdminShell({
 
   function isActive(href: string) {
     if (href === "/admin") return pathname === "/admin";
+    if (href === "/admin/home") return pathname === "/admin/home";
     return pathname.startsWith(href);
   }
 

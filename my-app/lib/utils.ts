@@ -44,6 +44,7 @@ export function remainingAmount(due: number, paid: number) {
 export function statusBadgeClass(status: string) {
   switch (status) {
     case "paid":
+    case "success":
     case "active":
       return "bg-emerald/15 text-emerald border-emerald/25";
     case "partial":

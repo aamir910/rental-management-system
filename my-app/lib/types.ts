@@ -1,5 +1,8 @@
 export type TenantStatus = "active" | "inactive";
 export type RentStatus = "pending" | "partial" | "paid" | "overdue";
+export type UtilityType = "electricity" | "gas";
+export type UtilityBillStatus = "pending" | "success";
+export type ReminderFrequency = "daily" | "weekly" | "monthly";
 
 export type Profile = {
   id: string;
@@ -49,4 +52,33 @@ export type TenantFormData = {
   gas_ref: string;
   status: TenantStatus;
   notes: string;
+};
+
+export type UtilityBill = {
+  id: string;
+  tenant_id: string;
+  utility_type: UtilityType;
+  billing_month: string;
+  amount: number;
+  due_date: string | null;
+  status: UtilityBillStatus;
+  reference_snapshot: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  tenants?: Pick<
+    Tenant,
+    "id" | "name" | "property_unit" | "electricity_ref" | "gas_ref"
+  >;
+};
+
+export type Reminder = {
+  id: string;
+  title: string;
+  body: string | null;
+  frequency: ReminderFrequency;
+  next_due_date: string;
+  is_done: boolean;
+  created_at: string;
+  updated_at: string;
 };
