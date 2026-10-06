@@ -1,4 +1,5 @@
 import { AddTenantForm } from "@/components/admin/AddTenantForm";
+import { DeleteTenantButton } from "@/components/admin/DeleteTenantButton";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import type { Tenant } from "@/lib/types";
@@ -64,12 +65,18 @@ export default async function TenantsPage() {
                       <StatusBadge status={tenant.status} />
                     </td>
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/tenants/${tenant.id}`}
-                        className="rounded-lg border border-gray-soft px-3 py-1.5 text-xs font-semibold text-ink hover:bg-gray-soft/60"
-                      >
-                        Detail
-                      </Link>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/admin/tenants/${tenant.id}`}
+                          className="rounded-lg border border-gray-soft px-3 py-1.5 text-xs font-semibold text-ink hover:bg-gray-soft/60"
+                        >
+                          Detail
+                        </Link>
+                        <DeleteTenantButton
+                          tenantId={tenant.id}
+                          tenantName={tenant.name}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))

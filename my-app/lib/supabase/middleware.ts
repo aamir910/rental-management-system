@@ -7,11 +7,20 @@ export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !key) {
-    if (request.nextUrl.pathname.startsWith("/admin")) {
+  const urlValid = !!url && /^https?:\/\//i.test(url);
+
+  if (!urlValid || !key) {
+    if (
+      request.nextUrl.pathname.startsWith("/admin") ||
+      request.nextUrl.pathname === "/login"
+    ) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/login";
       redirectUrl.searchParams.set("error", "missing_env");
+      // Avoid redirect loop on /login
+      if (request.nextUrl.pathname === "/login") {
+        return supabaseResponse;
+      }
       return NextResponse.redirect(redirectUrl);
     }
     return supabaseResponse;

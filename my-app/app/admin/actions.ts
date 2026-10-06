@@ -67,6 +67,19 @@ export async function updateTenant(tenantId: string, formData: FormData) {
   return { success: true };
 }
 
+export async function deleteTenant(tenantId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("tenants").delete().eq("id", tenantId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/tenants");
+  revalidatePath("/admin/rents");
+  return { success: true };
+}
+
 export async function updateRentPayment(
   rentId: string,
   data: {

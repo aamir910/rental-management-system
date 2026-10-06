@@ -1,3 +1,4 @@
+import { DeleteTenantButton } from "@/components/admin/DeleteTenantButton";
 import { EditTenantForm } from "@/components/admin/EditTenantForm";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
@@ -46,7 +47,14 @@ export default async function TenantDetailPage({ params }: Props) {
           <h1 className="mt-2 text-2xl font-semibold text-ink">{t.name}</h1>
           <p className="mt-1 text-sm text-gray-text">{t.property_unit}</p>
         </div>
-        <StatusBadge status={t.status} />
+        <div className="flex items-center gap-2">
+          <StatusBadge status={t.status} />
+          <DeleteTenantButton
+            tenantId={t.id}
+            tenantName={t.name}
+            redirectToList
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
