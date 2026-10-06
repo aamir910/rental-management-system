@@ -66,6 +66,12 @@ export function Navbar() {
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageSwitcher />
           <a
+            href="/login"
+            className="text-sm text-gray-muted transition-colors hover:text-white"
+          >
+            Admin
+          </a>
+          <a
             href="#features"
             className="rounded-full bg-violet px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-soft"
           >
