@@ -1,5 +1,5 @@
 import { MonthSwitcher } from "@/components/admin/MonthSwitcher";
-import { StatusBadge } from "@/components/admin/StatusBadge";
+import { OutstandingRentsList } from "@/components/admin/OutstandingRentsList";
 import { createClient } from "@/lib/supabase/server";
 import type { RentPayment, Tenant } from "@/lib/types";
 import {
@@ -45,9 +45,7 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
     (r) => r.status === "pending" || r.status === "partial"
   ).length;
 
-  const recentPending = rentList
-    .filter((r) => r.status !== "paid")
-    .slice(0, 6);
+  const outstanding = rentList.filter((r) => r.status !== "paid");
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5 sm:space-y-6">
@@ -65,7 +63,6 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
         </Suspense>
       </div>
 
-      {/* Mobile: 2-col grid; tablet: 2-col; desktop: 3-col */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
         <Kpi label="Total tenants" value={String(totalTenants)} />
         <Kpi label="Active tenants" value={String(activeTenants)} tone="emerald" />
@@ -106,121 +103,7 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
             View all
           </Link>
         </div>
-
-        {recentPending.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-gray-text sm:px-5">
-            No outstanding rents for this month. Generate rents or mark payments
-            in Monthly Rents.
-          </p>
-        ) : (
-          <>
-            {/* Mobile card grid */}
-            <div className="grid grid-cols-1 gap-3 p-4 sm:hidden">
-              {recentPending.map((rent) => (
-                <article
-                  key={rent.id}
-                  className="rounded-xl border border-gray-soft bg-surface/40 p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-ink">
-                        {rent.tenants?.name}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-gray-text">
-                        {rent.tenants?.property_unit}
-                      </p>
-                    </div>
-                    <StatusBadge status={rent.status} />
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                    <div className="rounded-lg bg-white px-3 py-2">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-text">
-                        Due
-                      </p>
-                      <p className="font-medium text-ink">
-                        {formatPKR(rent.amount_due)}
-                      </p>
-                    </div>
-                    <div className="rounded-lg bg-white px-3 py-2">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-text">
-                        Paid
-                      </p>
-                      <p className="font-medium text-emerald">
-                        {formatPKR(rent.amount_paid)}
-                      </p>
-                    </div>
-                    <div className="col-span-2 rounded-lg bg-white px-3 py-2">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-text">
-                        Remaining
-                      </p>
-                      <p className="font-semibold text-amber">
-                        {formatPKR(
-                          remainingAmount(rent.amount_due, rent.amount_paid)
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/admin/tenants/${rent.tenant_id}`}
-                    className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-gray-soft bg-white px-3 py-2 text-xs font-semibold text-ink hover:bg-gray-soft/60"
-                  >
-                    View detail
-                  </Link>
-                </article>
-              ))}
-            </div>
-
-            {/* Desktop / tablet table */}
-            <div className="hidden overflow-x-auto sm:block">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-surface text-xs uppercase tracking-wide text-gray-text">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Tenant</th>
-                    <th className="px-4 py-3 font-semibold">Due</th>
-                    <th className="px-4 py-3 font-semibold">Paid</th>
-                    <th className="px-4 py-3 font-semibold">Remaining</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentPending.map((rent) => (
-                    <tr key={rent.id} className="border-t border-gray-soft/80">
-                      <td className="px-4 py-3">
-                        <p className="font-medium">{rent.tenants?.name}</p>
-                        <p className="text-xs text-gray-text">
-                          {rent.tenants?.property_unit}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3">{formatPKR(rent.amount_due)}</td>
-                      <td className="px-4 py-3 text-emerald">
-                        {formatPKR(rent.amount_paid)}
-                      </td>
-                      <td className="px-4 py-3 text-amber">
-                        {formatPKR(
-                          remainingAmount(rent.amount_due, rent.amount_paid)
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={rent.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/tenants/${rent.tenant_id}`}
-                          className="rounded-lg border border-gray-soft px-3 py-1.5 text-xs font-semibold hover:bg-gray-soft/60"
-                        >
-                          Detail
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+        <OutstandingRentsList rents={outstanding} />
       </section>
     </div>
   );

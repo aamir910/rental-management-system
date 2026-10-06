@@ -5,21 +5,30 @@ import type { Reminder, ReminderFrequency } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { PaginationBar, usePagination } from "./Pagination";
 
 const ORDER: ReminderFrequency[] = ["daily", "weekly", "monthly"];
 
 export function RemindersList({ reminders }: { reminders: Reminder[] }) {
+  const sorted = useMemo(() => {
+    return [...reminders].sort((a, b) => {
+      const ai = ORDER.indexOf(a.frequency);
+      const bi = ORDER.indexOf(b.frequency);
+      if (ai !== bi) return ai - bi;
+      return a.next_due_date.localeCompare(b.next_due_date);
+    });
+  }, [reminders]);
+
+  const { page, totalPages, pageItems, total, from, to, goTo } =
+    usePagination(sorted);
+
   const grouped = useMemo(() => {
-    const map: Record<ReminderFrequency, Reminder[]> = {
-      daily: [],
-      weekly: [],
-      monthly: [],
-    };
-    for (const r of reminders) {
-      map[r.frequency]?.push(r);
+    const map: Partial<Record<ReminderFrequency, Reminder[]>> = {};
+    for (const r of pageItems) {
+      (map[r.frequency] ??= []).push(r);
     }
     return map;
-  }, [reminders]);
+  }, [pageItems]);
 
   if (reminders.length === 0) {
     return (
@@ -33,23 +42,40 @@ export function RemindersList({ reminders }: { reminders: Reminder[] }) {
   today.setHours(0, 0, 0, 0);
 
   return (
-    <div className="space-y-5">
-      {ORDER.map((freq) => {
-        const items = grouped[freq];
-        if (items.length === 0) return null;
-        return (
-          <div key={freq}>
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-text">
-              {freq}
-            </h3>
-            <div className="space-y-2">
-              {items.map((reminder) => (
-                <ReminderRow key={reminder.id} reminder={reminder} today={today} />
-              ))}
+    <div className="-mx-5 -mb-5 sm:-mx-6 sm:-mb-6">
+      <div className="space-y-5 px-5 sm:px-6">
+        {ORDER.map((freq) => {
+          const items = grouped[freq];
+          if (!items?.length) return null;
+          return (
+            <div key={freq}>
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-text">
+                {freq}
+              </h3>
+              <div className="space-y-2">
+                {items.map((reminder) => (
+                  <ReminderRow
+                    key={reminder.id}
+                    reminder={reminder}
+                    today={today}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
+      <div className="mt-5">
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          from={from}
+          to={to}
+          total={total}
+          onPageChange={goTo}
+        />
+      </div>
     </div>
   );
 }

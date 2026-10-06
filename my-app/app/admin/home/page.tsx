@@ -126,7 +126,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
           <AddReminderForm />
         </div>
 
-        <div className="rounded-2xl border border-gray-soft bg-white p-5 shadow-sm sm:p-6">
+        <div className="overflow-hidden rounded-2xl border border-gray-soft bg-white p-5 shadow-sm sm:p-6">
           <RemindersList reminders={reminderList} />
         </div>
       </section>

@@ -1,16 +1,12 @@
 import { DeleteTenantButton } from "@/components/admin/DeleteTenantButton";
 import { EditTenantForm } from "@/components/admin/EditTenantForm";
+import { RentHistoryList } from "@/components/admin/RentHistoryList";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { UtilityRefCard } from "@/components/admin/UtilityRefCard";
 import { BILL_CHECK_LINKS } from "@/lib/bill-links";
 import { createClient } from "@/lib/supabase/server";
 import type { RentPayment, Tenant } from "@/lib/types";
-import {
-  formatBillingMonth,
-  formatDate,
-  formatPKR,
-  remainingAmount,
-} from "@/lib/utils";
+import { formatDate, formatPKR } from "@/lib/utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -93,46 +89,7 @@ export default async function TenantDetailPage({ params }: Props) {
         <div className="border-b border-gray-soft px-5 py-4">
           <h2 className="text-lg font-semibold text-ink">Rent history</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-surface text-xs uppercase tracking-wide text-gray-text">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Month</th>
-                <th className="px-4 py-3 font-semibold">Due</th>
-                <th className="px-4 py-3 font-semibold">Paid</th>
-                <th className="px-4 py-3 font-semibold">Remaining</th>
-                <th className="px-4 py-3 font-semibold">Due date</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-text">
-                    No rent rows yet. Generate this month from Monthly Rents.
-                  </td>
-                </tr>
-              ) : (
-                history.map((rent) => (
-                  <tr key={rent.id} className="border-t border-gray-soft/80">
-                    <td className="px-4 py-3 font-medium">
-                      {formatBillingMonth(rent.billing_month)}
-                    </td>
-                    <td className="px-4 py-3">{formatPKR(rent.amount_due)}</td>
-                    <td className="px-4 py-3 text-emerald">{formatPKR(rent.amount_paid)}</td>
-                    <td className="px-4 py-3 text-amber">
-                      {formatPKR(remainingAmount(rent.amount_due, rent.amount_paid))}
-                    </td>
-                    <td className="px-4 py-3">{formatDate(rent.due_date)}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={rent.status} />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <RentHistoryList history={history} />
       </div>
     </div>
   );
