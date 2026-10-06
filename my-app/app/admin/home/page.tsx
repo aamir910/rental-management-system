@@ -1,10 +1,22 @@
+"use client";
+
 import { AddReminderForm } from "@/components/admin/AddReminderForm";
 import { AddUtilityBillForm } from "@/components/admin/AddUtilityBillForm";
+import {
+  ErrorBox,
+  FetchingBar,
+  SkeletonCard,
+  SkeletonTable,
+} from "@/components/admin/LoadingState";
 import { MonthSwitcher } from "@/components/admin/MonthSwitcher";
 import { RemindersList } from "@/components/admin/RemindersList";
 import { UtilityBillsList } from "@/components/admin/UtilityBillsList";
-import { createClient } from "@/lib/supabase/server";
-import type { Reminder, Tenant, UtilityBill } from "@/lib/types";
+import {
+  useGetActiveTenantsQuery,
+  useGetRemindersQuery,
+  useGetUtilityBillsByMonthQuery,
+} from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import {
   firstOfMonth,
   formatBillingMonth,
@@ -13,42 +25,28 @@ import {
   toMonthInputValue,
 } from "@/lib/utils";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
-type Props = {
-  searchParams: Promise<{ month?: string }>;
-};
-
-export default async function AdminHomePage({ searchParams }: Props) {
-  const params = await searchParams;
-  const month = params.month || toMonthInputValue(firstOfMonth());
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const month =
+    searchParams.get("month") || toMonthInputValue(firstOfMonth());
   const billingMonth = monthInputToBillingDate(month);
 
-  const supabase = await createClient();
+  const tenantsQ = useGetActiveTenantsQuery();
+  const billsQ = useGetUtilityBillsByMonthQuery(month);
+  const remindersQ = useGetRemindersQuery();
 
-  const [{ data: tenants }, { data: bills, error: billsError }, { data: reminders }] =
-    await Promise.all([
-      supabase
-        .from("tenants")
-        .select("*")
-        .eq("status", "active")
-        .order("name", { ascending: true }),
-      supabase
-        .from("utility_bills")
-        .select(
-          "*, tenants(id, name, property_unit, electricity_ref, gas_ref)"
-        )
-        .eq("billing_month", billingMonth)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("reminders")
-        .select("*")
-        .order("next_due_date", { ascending: true }),
-    ]);
+  const isLoading =
+    tenantsQ.isLoading || billsQ.isLoading || remindersQ.isLoading;
+  const isFetching =
+    (tenantsQ.isFetching || billsQ.isFetching || remindersQ.isFetching) &&
+    !isLoading;
 
-  const tenantList = (tenants ?? []) as Tenant[];
-  const billList = (bills ?? []) as UtilityBill[];
-  const reminderList = (reminders ?? []) as Reminder[];
+  const tenantList = tenantsQ.data ?? [];
+  const billList = billsQ.data ?? [];
+  const reminderList = remindersQ.data ?? [];
 
   const pending = billList.filter((b) => b.status === "pending");
   const success = billList.filter((b) => b.status === "success");
@@ -56,6 +54,8 @@ export default async function AdminHomePage({ searchParams }: Props) {
 
   return (
     <div className="space-y-8">
+      <FetchingBar show={isFetching} />
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-ink">Home</h1>
@@ -63,17 +63,15 @@ export default async function AdminHomePage({ searchParams }: Props) {
             Utility bills and reminders for {formatBillingMonth(billingMonth)}
           </p>
         </div>
-        <Suspense fallback={null}>
-          <MonthSwitcher month={month} />
-        </Suspense>
+        <MonthSwitcher month={month} />
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         <Link
           href="/admin"
           className="rounded-xl border border-gray-soft bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-gray-soft/50"
         >
-          Rent dashboard
+          Dashboard
         </Link>
         <Link
           href="/admin/tenants"
@@ -93,25 +91,43 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <h2 className="text-lg font-semibold text-ink">Monthly utility bills</h2>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Pending" value={String(pending.length)} tone="amber" />
-          <Stat label="Success" value={String(success.length)} tone="emerald" />
-          <Stat label="Total amount" value={formatPKR(totalAmount)} />
+          {isLoading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : (
+            <>
+              <Stat label="Pending" value={String(pending.length)} tone="amber" />
+              <Stat label="Success" value={String(success.length)} tone="emerald" />
+              <Stat label="Total amount" value={formatPKR(totalAmount)} />
+            </>
+          )}
         </div>
 
-        {billsError && (
-          <div className="rounded-2xl border border-red/30 bg-red/10 px-4 py-3 text-sm text-red">
-            {billsError.message}. If tables are missing, run{" "}
-            <code>supabase/migration_home_utilities_reminders.sql</code> in Supabase.
-          </div>
+        {billsQ.isError && (
+          <ErrorBox
+            message={rtkErrorMessage(
+              billsQ.error,
+              "Failed to load utility bills. If tables are missing, run supabase/APPLY_BILLS_AND_HOME.sql."
+            )}
+          />
         )}
 
         <div className="rounded-2xl border border-gray-soft bg-white p-5 shadow-sm sm:p-6">
-          <h3 className="mb-4 text-sm font-semibold text-ink">Add gas / electricity bill</h3>
+          <h3 className="mb-4 text-sm font-semibold text-ink">
+            Add gas / electricity bill
+          </h3>
           <AddUtilityBillForm tenants={tenantList} month={month} />
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-gray-soft bg-white shadow-sm">
-          <UtilityBillsList bills={billList} />
+          {billsQ.isLoading ? (
+            <SkeletonTable rows={4} />
+          ) : (
+            <UtilityBillsList bills={billList} />
+          )}
         </div>
       </section>
 
@@ -127,10 +143,22 @@ export default async function AdminHomePage({ searchParams }: Props) {
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-gray-soft bg-white p-5 shadow-sm sm:p-6">
-          <RemindersList reminders={reminderList} />
+          {remindersQ.isLoading ? (
+            <SkeletonTable rows={3} />
+          ) : (
+            <RemindersList reminders={reminderList} />
+          )}
         </div>
       </section>
     </div>
+  );
+}
+
+export default function AdminHomePage() {
+  return (
+    <Suspense fallback={<SkeletonTable rows={8} />}>
+      <HomeContent />
+    </Suspense>
   );
 }
 

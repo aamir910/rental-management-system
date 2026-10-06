@@ -6,6 +6,8 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
+  adjustFontFallback: true,
 });
 
 const instrumentSerif = Instrument_Serif({
@@ -13,6 +15,8 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   display: "swap",
+  preload: false,
+  adjustFontFallback: true,
 });
 
 const notoNastaliq = Noto_Nastaliq_Urdu({
@@ -20,6 +24,8 @@ const notoNastaliq = Noto_Nastaliq_Urdu({
   subsets: ["arabic"],
   weight: "400",
   display: "swap",
+  preload: false,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {

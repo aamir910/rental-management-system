@@ -1,8 +1,9 @@
 "use client";
 
-import { deleteTenant } from "@/app/admin/actions";
+import { InlineSpinner } from "@/components/admin/LoadingState";
+import { useDeleteTenantMutation } from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export function DeleteTenantButton({
   tenantId,
@@ -14,7 +15,7 @@ export function DeleteTenantButton({
   redirectToList?: boolean;
 }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [deleteTenant, { isLoading }] = useDeleteTenantMutation();
 
   async function onDelete() {
     const ok = window.confirm(
@@ -22,32 +23,25 @@ export function DeleteTenantButton({
     );
     if (!ok) return;
 
-    setLoading(true);
-    const result = await deleteTenant(tenantId);
-    setLoading(false);
-
-    if (result?.error) {
-      window.alert(result.error);
-      return;
+    try {
+      await deleteTenant(tenantId).unwrap();
+      if (redirectToList) {
+        router.push("/admin/tenants");
+      }
+    } catch (err) {
+      window.alert(rtkErrorMessage(err, "Failed to delete tenant."));
     }
-
-    if (redirectToList) {
-      router.push("/admin/tenants");
-      router.refresh();
-      return;
-    }
-
-    router.refresh();
   }
 
   return (
     <button
       type="button"
       onClick={onDelete}
-      disabled={loading}
-      className="rounded-lg border border-red/30 bg-red/10 px-3 py-1.5 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
+      disabled={isLoading}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-red/30 bg-red/10 px-3 py-1.5 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
     >
-      {loading ? "Deleting…" : "Delete"}
+      {isLoading && <InlineSpinner />}
+      {isLoading ? "Deleting…" : "Delete"}
     </button>
   );
 }

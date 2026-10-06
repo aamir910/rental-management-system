@@ -1,10 +1,14 @@
 "use client";
 
-import { deleteReminder, toggleReminderDone } from "@/app/admin/actions";
+import {
+  useDeleteReminderMutation,
+  useToggleReminderDoneMutation,
+} from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { Reminder, ReminderFrequency } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { InlineSpinner } from "./LoadingState";
 import { PaginationBar, usePagination } from "./Pagination";
 
 const ORDER: ReminderFrequency[] = ["daily", "weekly", "monthly"];
@@ -87,33 +91,33 @@ function ReminderRow({
   reminder: Reminder;
   today: Date;
 }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [toggleDone, { isLoading: toggleLoading }] =
+    useToggleReminderDoneMutation();
+  const [removeReminder, { isLoading: deleteLoading }] =
+    useDeleteReminderMutation();
+  const loading = toggleLoading || deleteLoading;
   const due = new Date(`${reminder.next_due_date}T00:00:00`);
   const overdue = !reminder.is_done && due < today;
 
   async function toggle() {
-    setLoading(true);
-    const result = await toggleReminderDone(reminder.id, !reminder.is_done);
-    setLoading(false);
-    if (result?.error) {
-      window.alert(result.error);
-      return;
+    try {
+      await toggleDone({
+        reminderId: reminder.id,
+        isDone: !reminder.is_done,
+      }).unwrap();
+    } catch (err) {
+      window.alert(rtkErrorMessage(err, "Failed to update reminder."));
     }
-    router.refresh();
   }
 
   async function onDelete() {
     const ok = window.confirm(`Delete reminder "${reminder.title}"?`);
     if (!ok) return;
-    setLoading(true);
-    const result = await deleteReminder(reminder.id);
-    setLoading(false);
-    if (result?.error) {
-      window.alert(result.error);
-      return;
+    try {
+      await removeReminder(reminder.id).unwrap();
+    } catch (err) {
+      window.alert(rtkErrorMessage(err, "Failed to delete reminder."));
     }
-    router.refresh();
   }
 
   return (
@@ -146,16 +150,18 @@ function ReminderRow({
             type="button"
             disabled={loading}
             onClick={toggle}
-            className="rounded-lg border border-gray-soft px-2.5 py-1 text-xs font-semibold text-ink hover:bg-gray-soft/60 disabled:opacity-60"
+            className="inline-flex items-center gap-1 rounded-lg border border-gray-soft px-2.5 py-1 text-xs font-semibold text-ink hover:bg-gray-soft/60 disabled:opacity-60"
           >
+            {toggleLoading && <InlineSpinner />}
             {reminder.is_done ? "Reopen" : "Mark done"}
           </button>
           <button
             type="button"
             disabled={loading}
             onClick={onDelete}
-            className="rounded-lg border border-red/30 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
+            className="inline-flex items-center gap-1 rounded-lg border border-red/30 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
           >
+            {deleteLoading && <InlineSpinner />}
             Delete
           </button>
         </div>

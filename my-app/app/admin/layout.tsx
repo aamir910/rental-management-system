@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { createClient } from "@/lib/supabase/server";
+import { StoreProvider } from "@/lib/store/StoreProvider";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -16,5 +17,9 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  return <AdminShell email={user.email}>{children}</AdminShell>;
+  return (
+    <StoreProvider>
+      <AdminShell email={user.email}>{children}</AdminShell>
+    </StoreProvider>
+  );
 }

@@ -1,15 +1,15 @@
 "use client";
 
-import {
-  deleteUtilityBill,
-  updateUtilityBillStatus,
-} from "@/app/admin/actions";
 import { BILL_CHECK_LINKS } from "@/lib/bill-links";
+import {
+  useDeleteUtilityBillMutation,
+  useUpdateUtilityBillStatusMutation,
+} from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { UtilityBill, UtilityBillStatus } from "@/lib/types";
 import { formatDate, formatPKR } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { InlineSpinner } from "./LoadingState";
 import { PaginationBar, usePagination } from "./Pagination";
 import { StatusBadge } from "./StatusBadge";
 import { useViewMode, ViewModeToggle } from "./ViewModeToggle";
@@ -86,35 +86,32 @@ function UtilityBillItem({
   bill: UtilityBill;
   view: "grid" | "list";
 }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [updateStatus, { isLoading: statusLoading }] =
+    useUpdateUtilityBillStatusMutation();
+  const [deleteBill, { isLoading: deleteLoading }] =
+    useDeleteUtilityBillMutation();
+  const loading = statusLoading || deleteLoading;
   const link =
     bill.utility_type === "electricity"
       ? BILL_CHECK_LINKS.electricity
       : BILL_CHECK_LINKS.gas;
 
   async function setStatus(status: UtilityBillStatus) {
-    setLoading(true);
-    const result = await updateUtilityBillStatus(bill.id, status);
-    setLoading(false);
-    if (result?.error) {
-      window.alert(result.error);
-      return;
+    try {
+      await updateStatus({ billId: bill.id, status }).unwrap();
+    } catch (err) {
+      window.alert(rtkErrorMessage(err, "Failed to update status."));
     }
-    router.refresh();
   }
 
   async function onDelete() {
     const ok = window.confirm("Delete this utility bill?");
     if (!ok) return;
-    setLoading(true);
-    const result = await deleteUtilityBill(bill.id);
-    setLoading(false);
-    if (result?.error) {
-      window.alert(result.error);
-      return;
+    try {
+      await deleteBill(bill.id).unwrap();
+    } catch (err) {
+      window.alert(rtkErrorMessage(err, "Failed to delete bill."));
     }
-    router.refresh();
   }
 
   async function copyRef() {
@@ -133,8 +130,9 @@ function UtilityBillItem({
           type="button"
           disabled={loading}
           onClick={() => setStatus("success")}
-          className="rounded-lg bg-emerald/15 px-2.5 py-1 text-xs font-semibold text-emerald hover:bg-emerald/25 disabled:opacity-60"
+          className="inline-flex items-center gap-1 rounded-lg bg-emerald/15 px-2.5 py-1 text-xs font-semibold text-emerald hover:bg-emerald/25 disabled:opacity-60"
         >
+          {statusLoading && <InlineSpinner />}
           Mark success
         </button>
       ) : (
@@ -142,8 +140,9 @@ function UtilityBillItem({
           type="button"
           disabled={loading}
           onClick={() => setStatus("pending")}
-          className="rounded-lg bg-amber/15 px-2.5 py-1 text-xs font-semibold text-amber hover:bg-amber/25 disabled:opacity-60"
+          className="inline-flex items-center gap-1 rounded-lg bg-amber/15 px-2.5 py-1 text-xs font-semibold text-amber hover:bg-amber/25 disabled:opacity-60"
         >
+          {statusLoading && <InlineSpinner />}
           Mark pending
         </button>
       )}
@@ -160,8 +159,9 @@ function UtilityBillItem({
         type="button"
         disabled={loading}
         onClick={onDelete}
-        className="rounded-lg border border-red/30 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
+        className="inline-flex items-center gap-1 rounded-lg border border-red/30 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
       >
+        {deleteLoading && <InlineSpinner />}
         Delete
       </button>
     </div>

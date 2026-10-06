@@ -1,31 +1,26 @@
 "use client";
 
-import { createReminder } from "@/app/admin/actions";
 import { FormLabel } from "@/components/admin/FormLabel";
-import { useRouter } from "next/navigation";
+import { InlineSpinner } from "@/components/admin/LoadingState";
+import { formDataToValues, useCreateReminderMutation } from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import { FormEvent, useState } from "react";
 
 export function AddReminderForm() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [createReminder, { isLoading }] = useCreateReminderMutation();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    setLoading(true);
     setError(null);
 
-    const result = await createReminder(new FormData(form));
-    setLoading(false);
-
-    if (result?.error) {
-      setError(result.error);
-      return;
+    try {
+      await createReminder(formDataToValues(new FormData(form))).unwrap();
+      form.reset();
+    } catch (err) {
+      setError(rtkErrorMessage(err, "Failed to add reminder."));
     }
-
-    form.reset();
-    router.refresh();
   }
 
   return (
@@ -85,10 +80,11 @@ export function AddReminderForm() {
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-mid disabled:opacity-60"
+        disabled={isLoading}
+        className="inline-flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-mid disabled:opacity-60"
       >
-        {loading ? "Saving…" : "Add reminder"}
+        {isLoading && <InlineSpinner className="text-white" />}
+        {isLoading ? "Saving…" : "Add reminder"}
       </button>
     </form>
   );

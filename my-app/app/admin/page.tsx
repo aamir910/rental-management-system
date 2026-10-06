@@ -1,7 +1,18 @@
+"use client";
+
+import {
+  ErrorBox,
+  FetchingBar,
+  SkeletonCard,
+  SkeletonTable,
+} from "@/components/admin/LoadingState";
 import { MonthSwitcher } from "@/components/admin/MonthSwitcher";
 import { OutstandingRentsList } from "@/components/admin/OutstandingRentsList";
-import { createClient } from "@/lib/supabase/server";
-import type { RentPayment, Tenant } from "@/lib/types";
+import {
+  useGetRentsByMonthQuery,
+  useGetTenantsQuery,
+} from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import {
   firstOfMonth,
   formatBillingMonth,
@@ -11,29 +22,25 @@ import {
   toMonthInputValue,
 } from "@/lib/utils";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
-type Props = {
-  searchParams: Promise<{ month?: string }>;
-};
-
-export default async function AdminDashboardPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const month = params.month || toMonthInputValue(firstOfMonth());
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const month =
+    searchParams.get("month") || toMonthInputValue(firstOfMonth());
   const billingMonth = monthInputToBillingDate(month);
 
-  const supabase = await createClient();
+  const tenantsQ = useGetTenantsQuery();
+  const rentsQ = useGetRentsByMonthQuery(month);
 
-  const [{ data: tenants }, { data: rents }] = await Promise.all([
-    supabase.from("tenants").select("*"),
-    supabase
-      .from("rent_payments")
-      .select("*, tenants(id, name, property_unit, phone, monthly_rent, status)")
-      .eq("billing_month", billingMonth),
-  ]);
+  const isLoading = tenantsQ.isLoading || rentsQ.isLoading;
+  const isFetching =
+    (tenantsQ.isFetching || rentsQ.isFetching) && !isLoading;
+  const error = tenantsQ.error || rentsQ.error;
 
-  const tenantList = (tenants ?? []) as Tenant[];
-  const rentList = (rents ?? []) as RentPayment[];
+  const tenantList = tenantsQ.data ?? [];
+  const rentList = rentsQ.data ?? [];
 
   const totalTenants = tenantList.length;
   const activeTenants = tenantList.filter((t) => t.status === "active").length;
@@ -44,11 +51,12 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
   const pending = rentList.filter(
     (r) => r.status === "pending" || r.status === "partial"
   ).length;
-
   const outstanding = rentList.filter((r) => r.status !== "paid");
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5 sm:space-y-6">
+      <FetchingBar show={isFetching} />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-xl font-semibold text-ink sm:text-2xl">
@@ -58,22 +66,34 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
             Overview for {formatBillingMonth(billingMonth)}
           </p>
         </div>
-        <Suspense fallback={null}>
-          <MonthSwitcher month={month} />
-        </Suspense>
+        <MonthSwitcher month={month} />
       </div>
 
+      {error && (
+        <ErrorBox message={rtkErrorMessage(error, "Failed to load dashboard.")} />
+      )}
+
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-        <Kpi label="Total tenants" value={String(totalTenants)} />
-        <Kpi label="Active tenants" value={String(activeTenants)} tone="emerald" />
-        <Kpi label="Expected rent" value={formatPKR(expected)} />
-        <Kpi label="Collected" value={formatPKR(collected)} tone="emerald" />
-        <Kpi label="Remaining due" value={formatPKR(remaining)} tone="amber" />
-        <Kpi
-          label="Pending / Overdue"
-          value={`${pending} / ${overdue}`}
-          tone={overdue > 0 ? "red" : "violet"}
-        />
+        {isLoading ? (
+          Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : (
+          <>
+            <Kpi label="Total tenants" value={String(totalTenants)} />
+            <Kpi
+              label="Active tenants"
+              value={String(activeTenants)}
+              tone="emerald"
+            />
+            <Kpi label="Expected rent" value={formatPKR(expected)} />
+            <Kpi label="Collected" value={formatPKR(collected)} tone="emerald" />
+            <Kpi label="Remaining due" value={formatPKR(remaining)} tone="amber" />
+            <Kpi
+              label="Pending / Overdue"
+              value={`${pending} / ${overdue}`}
+              tone={overdue > 0 ? "red" : "violet"}
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -103,9 +123,21 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
             View all
           </Link>
         </div>
-        <OutstandingRentsList rents={outstanding} />
+        {isLoading ? (
+          <SkeletonTable rows={4} />
+        ) : (
+          <OutstandingRentsList rents={outstanding} />
+        )}
       </section>
     </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={<SkeletonTable rows={8} />}>
+      <DashboardContent />
+    </Suspense>
   );
 }
 

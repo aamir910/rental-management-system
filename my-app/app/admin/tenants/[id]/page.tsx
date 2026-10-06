@@ -1,45 +1,72 @@
+"use client";
+
 import { DeleteTenantButton } from "@/components/admin/DeleteTenantButton";
 import { EditTenantForm } from "@/components/admin/EditTenantForm";
+import {
+  ErrorBox,
+  FetchingBar,
+  PageSpinner,
+  SkeletonTable,
+} from "@/components/admin/LoadingState";
 import { RentHistoryList } from "@/components/admin/RentHistoryList";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { UtilityRefCard } from "@/components/admin/UtilityRefCard";
 import { BILL_CHECK_LINKS } from "@/lib/bill-links";
-import { createClient } from "@/lib/supabase/server";
-import type { RentPayment, Tenant } from "@/lib/types";
+import {
+  useGetTenantQuery,
+  useGetTenantRentsQuery,
+} from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import { formatDate, formatPKR } from "@/lib/utils";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { use } from "react";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default async function TenantDetailPage({ params }: Props) {
-  const { id } = await params;
-  const supabase = await createClient();
+export default function TenantDetailPage({ params }: Props) {
+  const { id } = use(params);
+  const tenantQ = useGetTenantQuery(id);
+  const rentsQ = useGetTenantRentsQuery(id);
 
-  const { data: tenant, error } = await supabase
-    .from("tenants")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const isLoading = tenantQ.isLoading;
+  const isFetching =
+    (tenantQ.isFetching || rentsQ.isFetching) && !isLoading;
 
-  if (error || !tenant) notFound();
+  if (isLoading) {
+    return <PageSpinner label="Loading tenant…" />;
+  }
 
-  const { data: rents } = await supabase
-    .from("rent_payments")
-    .select("*")
-    .eq("tenant_id", id)
-    .order("billing_month", { ascending: false });
+  if (tenantQ.isError || !tenantQ.data) {
+    return (
+      <div className="space-y-4">
+        <Link
+          href="/admin/tenants"
+          className="text-xs font-medium text-violet hover:underline"
+        >
+          ← Back to tenants
+        </Link>
+        <ErrorBox
+          message={rtkErrorMessage(tenantQ.error, "Tenant not found.")}
+        />
+      </div>
+    );
+  }
 
-  const t = tenant as Tenant;
-  const history = (rents ?? []) as RentPayment[];
+  const t = tenantQ.data;
+  const history = rentsQ.data ?? [];
 
   return (
     <div className="space-y-6">
+      <FetchingBar show={isFetching} />
+
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href="/admin/tenants" className="text-xs font-medium text-violet hover:underline">
+          <Link
+            href="/admin/tenants"
+            className="text-xs font-medium text-violet hover:underline"
+          >
             ← Back to tenants
           </Link>
           <h1 className="mt-2 text-2xl font-semibold text-ink">{t.name}</h1>
@@ -89,7 +116,17 @@ export default async function TenantDetailPage({ params }: Props) {
         <div className="border-b border-gray-soft px-5 py-4">
           <h2 className="text-lg font-semibold text-ink">Rent history</h2>
         </div>
-        <RentHistoryList history={history} />
+        {rentsQ.isLoading ? (
+          <SkeletonTable rows={4} />
+        ) : rentsQ.isError ? (
+          <div className="p-4">
+            <ErrorBox
+              message={rtkErrorMessage(rentsQ.error, "Failed to load rent history.")}
+            />
+          </div>
+        ) : (
+          <RentHistoryList history={history} />
+        )}
       </div>
     </div>
   );

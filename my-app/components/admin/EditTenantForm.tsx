@@ -1,36 +1,32 @@
 "use client";
 
-import { updateTenant } from "@/app/admin/actions";
 import { FormLabel } from "@/components/admin/FormLabel";
+import { InlineSpinner } from "@/components/admin/LoadingState";
+import { formDataToValues, useUpdateTenantMutation } from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { Tenant } from "@/lib/types";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 export function EditTenantForm({ tenant }: { tenant: Tenant }) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [updateTenant, { isLoading }] = useUpdateTenantMutation();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    setLoading(true);
     setError(null);
     setSuccess(false);
 
-    const formData = new FormData(form);
-    const result = await updateTenant(tenant.id, formData);
-
-    setLoading(false);
-
-    if (result?.error) {
-      setError(result.error);
-      return;
+    try {
+      await updateTenant({
+        tenantId: tenant.id,
+        values: formDataToValues(new FormData(form)),
+      }).unwrap();
+      setSuccess(true);
+    } catch (err) {
+      setError(rtkErrorMessage(err, "Failed to update tenant."));
     }
-
-    setSuccess(true);
-    router.refresh();
   }
 
   return (
@@ -109,10 +105,11 @@ export function EditTenantForm({ tenant }: { tenant: Tenant }) {
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-xl bg-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
+        disabled={isLoading}
+        className="inline-flex items-center gap-2 rounded-xl bg-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
       >
-        {loading ? "Saving…" : "Save changes"}
+        {isLoading && <InlineSpinner />}
+        {isLoading ? "Saving…" : "Save changes"}
       </button>
     </form>
   );

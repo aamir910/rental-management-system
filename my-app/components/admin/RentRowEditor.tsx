@@ -1,10 +1,11 @@
 "use client";
 
-import { updateRentPayment } from "@/app/admin/actions";
+import { InlineSpinner } from "@/components/admin/LoadingState";
+import { useUpdateRentPaymentMutation } from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { RentPayment, RentStatus } from "@/lib/types";
 import { formatPKR, remainingAmount } from "@/lib/utils";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { StatusBadge } from "./StatusBadge";
 
@@ -17,12 +18,11 @@ export function RentRowEditor({
   rent: RentPayment;
   view?: ViewMode;
 }) {
-  const router = useRouter();
   const [amountPaid, setAmountPaid] = useState(String(rent.amount_paid ?? 0));
   const [dueDate, setDueDate] = useState(rent.due_date);
   const [status, setStatus] = useState<RentStatus>(rent.status);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [updateRent, { isLoading: saving }] = useUpdateRentPaymentMutation();
 
   const remaining = remainingAmount(
     Number(rent.amount_due),
@@ -30,24 +30,18 @@ export function RentRowEditor({
   );
 
   async function save() {
-    setSaving(true);
     setMessage(null);
-
-    const result = await updateRentPayment(rent.id, {
-      amount_paid: Number(amountPaid || 0),
-      due_date: dueDate,
-      status,
-    });
-
-    setSaving(false);
-
-    if (result?.error) {
-      setMessage(result.error);
-      return;
+    try {
+      await updateRent({
+        rentId: rent.id,
+        amount_paid: Number(amountPaid || 0),
+        due_date: dueDate,
+        status,
+      }).unwrap();
+      setMessage("Saved");
+    } catch (err) {
+      setMessage(rtkErrorMessage(err, "Save failed."));
     }
-
-    setMessage("Saved");
-    router.refresh();
   }
 
   const fields = (
@@ -98,9 +92,10 @@ export function RentRowEditor({
         type="button"
         onClick={save}
         disabled={saving}
-        className="rounded-lg bg-violet px-3 py-2 text-xs font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-violet px-3 py-2 text-xs font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
       >
-        {saving ? "…" : "Save"}
+        {saving && <InlineSpinner className="text-white" />}
+        {saving ? "Saving…" : "Save"}
       </button>
       <Link
         href={`/admin/tenants/${rent.tenant_id}`}

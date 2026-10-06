@@ -1,10 +1,11 @@
 "use client";
 
-import { createUtilityBill } from "@/app/admin/actions";
 import { FormLabel } from "@/components/admin/FormLabel";
+import { InlineSpinner } from "@/components/admin/LoadingState";
+import { formDataToValues, useCreateUtilityBillMutation } from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { Tenant } from "@/lib/types";
-import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 export function AddUtilityBillForm({
   tenants,
@@ -13,12 +14,19 @@ export function AddUtilityBillForm({
   tenants: Tenant[];
   month: string;
 }) {
-  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [tenantId, setTenantId] = useState(tenants[0]?.id ?? "");
-  const [utilityType, setUtilityType] = useState<"electricity" | "gas">("electricity");
+  const [utilityType, setUtilityType] = useState<"electricity" | "gas">(
+    "electricity"
+  );
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [createBill, { isLoading }] = useCreateUtilityBillMutation();
+
+  useEffect(() => {
+    if (!tenantId && tenants[0]?.id) {
+      setTenantId(tenants[0].id);
+    }
+  }, [tenants, tenantId]);
 
   const selected = useMemo(
     () => tenants.find((t) => t.id === tenantId),
@@ -35,25 +43,17 @@ export function AddUtilityBillForm({
     const form = formRef.current;
     if (!form) return;
 
-    setLoading(true);
     setError(null);
 
     try {
       const formData = new FormData(form);
       formData.set("month", month);
-      const result = await createUtilityBill(formData);
-
-      if (result?.error) {
-        setError(result.error);
-        return;
-      }
-
+      await createBill(formDataToValues(formData)).unwrap();
       formRef.current?.reset();
       setUtilityType("electricity");
       if (tenants[0]) setTenantId(tenants[0].id);
-      router.refresh();
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(rtkErrorMessage(err, "Failed to add utility bill."));
     }
   }
 
@@ -169,10 +169,11 @@ export function AddUtilityBillForm({
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-xl bg-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
+        disabled={isLoading}
+        className="inline-flex items-center gap-2 rounded-xl bg-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
       >
-        {loading ? "Saving…" : "Add utility bill"}
+        {isLoading && <InlineSpinner />}
+        {isLoading ? "Saving…" : "Add utility bill"}
       </button>
     </form>
   );

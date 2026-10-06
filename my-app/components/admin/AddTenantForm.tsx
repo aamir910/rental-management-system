@@ -1,40 +1,29 @@
 "use client";
 
-import { createTenant } from "@/app/admin/actions";
 import { FormLabel } from "@/components/admin/FormLabel";
-import { useRouter } from "next/navigation";
+import { InlineSpinner } from "@/components/admin/LoadingState";
+import { formDataToValues, useCreateTenantMutation } from "@/lib/store/api";
+import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import { FormEvent, useRef, useState } from "react";
 
 export function AddTenantForm({ onDone }: { onDone?: () => void }) {
-  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [createTenant, { isLoading }] = useCreateTenantMutation();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = formRef.current;
     if (!form) return;
 
-    setLoading(true);
     setError(null);
 
     try {
-      const formData = new FormData(form);
-      const result = await createTenant(formData);
-
-      if (result?.error) {
-        setError(result.error);
-        return;
-      }
-
+      await createTenant(formDataToValues(new FormData(form))).unwrap();
       formRef.current?.reset();
       onDone?.();
-      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add tenant.");
-    } finally {
-      setLoading(false);
+      setError(rtkErrorMessage(err, "Failed to add tenant."));
     }
   }
 
@@ -103,10 +92,11 @@ export function AddTenantForm({ onDone }: { onDone?: () => void }) {
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-xl bg-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
+        disabled={isLoading}
+        className="inline-flex items-center gap-2 rounded-xl bg-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-soft disabled:opacity-60"
       >
-        {loading ? "Saving…" : "Add Tenant"}
+        {isLoading && <InlineSpinner />}
+        {isLoading ? "Saving…" : "Add Tenant"}
       </button>
     </form>
   );
