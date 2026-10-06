@@ -16,6 +16,8 @@ export type Tenant = {
   property_unit: string;
   monthly_rent: number;
   move_in_date: string | null;
+  electricity_ref: string | null;
+  gas_ref: string | null;
   status: TenantStatus;
   notes: string | null;
   created_at: string;
@@ -43,6 +45,8 @@ export type TenantFormData = {
   property_unit: string;
   monthly_rent: string;
   move_in_date: string;
+  electricity_ref: string;
+  gas_ref: string;
   status: TenantStatus;
   notes: string;
 };

@@ -57,6 +57,16 @@ export function AddTenantForm({ onDone }: { onDone?: () => void }) {
           defaultValue="0"
         />
         <Field label="Move-in date" name="move_in_date" type="date" />
+        <Field
+          label="Electricity reference (IESCO)"
+          name="electricity_ref"
+          placeholder="14-digit reference no."
+        />
+        <Field
+          label="Gas reference (SNGPL)"
+          name="gas_ref"
+          placeholder="Consumer / Account ID"
+        />
         <div>
           <label className="mb-1.5 block text-xs font-medium text-gray-text">Status</label>
           <select

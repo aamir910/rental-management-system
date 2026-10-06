@@ -56,6 +56,16 @@ export function EditTenantForm({ tenant }: { tenant: Tenant }) {
           type="date"
           defaultValue={tenant.move_in_date ?? ""}
         />
+        <Field
+          label="Electricity reference (IESCO)"
+          name="electricity_ref"
+          defaultValue={tenant.electricity_ref ?? ""}
+        />
+        <Field
+          label="Gas reference (SNGPL)"
+          name="gas_ref"
+          defaultValue={tenant.gas_ref ?? ""}
+        />
         <div>
           <label className="mb-1.5 block text-xs font-medium text-gray-text">Status</label>
           <select

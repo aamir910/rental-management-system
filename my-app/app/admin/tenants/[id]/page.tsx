@@ -1,6 +1,8 @@
 import { DeleteTenantButton } from "@/components/admin/DeleteTenantButton";
 import { EditTenantForm } from "@/components/admin/EditTenantForm";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { UtilityRefCard } from "@/components/admin/UtilityRefCard";
+import { BILL_CHECK_LINKS } from "@/lib/bill-links";
 import { createClient } from "@/lib/supabase/server";
 import type { RentPayment, Tenant } from "@/lib/types";
 import {
@@ -62,6 +64,24 @@ export default async function TenantDetailPage({ params }: Props) {
         <InfoCard label="Phone" value={t.phone || "—"} />
         <InfoCard label="CNIC" value={t.cnic || "—"} />
         <InfoCard label="Move-in" value={formatDate(t.move_in_date)} />
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold text-ink">Utility references</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <UtilityRefCard
+            title={BILL_CHECK_LINKS.electricity.label}
+            reference={t.electricity_ref}
+            checkLabel={BILL_CHECK_LINKS.electricity.shortLabel}
+            checkUrl={BILL_CHECK_LINKS.electricity.url}
+          />
+          <UtilityRefCard
+            title={BILL_CHECK_LINKS.gas.label}
+            reference={t.gas_ref}
+            checkLabel={BILL_CHECK_LINKS.gas.shortLabel}
+            checkUrl={BILL_CHECK_LINKS.gas.url}
+          />
+        </div>
       </div>
 
       <div className="rounded-2xl border border-gray-soft bg-white p-5 shadow-sm sm:p-6">

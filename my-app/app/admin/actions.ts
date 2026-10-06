@@ -22,6 +22,8 @@ export async function createTenant(formData: FormData) {
     property_unit: String(formData.get("property_unit") || "").trim(),
     monthly_rent: Number(formData.get("monthly_rent") || 0),
     move_in_date: String(formData.get("move_in_date") || "").trim() || null,
+    electricity_ref: String(formData.get("electricity_ref") || "").trim() || null,
+    gas_ref: String(formData.get("gas_ref") || "").trim() || null,
     status: (String(formData.get("status") || "active") as TenantStatus),
     notes: String(formData.get("notes") || "").trim() || null,
   };
@@ -49,6 +51,8 @@ export async function updateTenant(tenantId: string, formData: FormData) {
     property_unit: String(formData.get("property_unit") || "").trim(),
     monthly_rent: Number(formData.get("monthly_rent") || 0),
     move_in_date: String(formData.get("move_in_date") || "").trim() || null,
+    electricity_ref: String(formData.get("electricity_ref") || "").trim() || null,
+    gas_ref: String(formData.get("gas_ref") || "").trim() || null,
     status: (String(formData.get("status") || "active") as TenantStatus),
     notes: String(formData.get("notes") || "").trim() || null,
   };

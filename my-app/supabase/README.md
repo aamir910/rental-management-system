@@ -21,3 +21,11 @@ npm run dev
 6. Open `http://localhost:3000/login` and sign in.
 
 A profile row is created automatically via the `handle_new_user` trigger.
+
+## Later migrations
+
+If you already ran `schema.sql` before utility fields were added, also run:
+
+[`migration_add_utility_refs.sql`](./migration_add_utility_refs.sql)
+
+That adds `electricity_ref` and `gas_ref` on `tenants`.

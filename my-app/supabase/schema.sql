@@ -18,6 +18,8 @@ create table if not exists public.tenants (
   property_unit text not null,
   monthly_rent numeric(12, 2) not null default 0,
   move_in_date date,
+  electricity_ref text,
+  gas_ref text,
   status text not null default 'active' check (status in ('active', 'inactive')),
   notes text,
   created_at timestamptz not null default now(),
