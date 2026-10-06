@@ -1,6 +1,7 @@
 "use client";
 
 import { updateTenant } from "@/app/admin/actions";
+import { FormLabel } from "@/components/admin/FormLabel";
 import type { Tenant } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -13,11 +14,12 @@ export function EditTenantForm({ tenant }: { tenant: Tenant }) {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setLoading(true);
     setError(null);
     setSuccess(false);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const result = await updateTenant(tenant.id, formData);
 
     setLoading(false);
@@ -33,6 +35,10 @@ export function EditTenantForm({ tenant }: { tenant: Tenant }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      <p className="text-xs text-gray-text">
+        Fields marked with <span className="text-red">*</span> are required.
+      </p>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Full name" name="name" required defaultValue={tenant.name} />
         <Field label="Phone" name="phone" defaultValue={tenant.phone ?? ""} />
@@ -67,10 +73,11 @@ export function EditTenantForm({ tenant }: { tenant: Tenant }) {
           defaultValue={tenant.gas_ref ?? ""}
         />
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">Status</label>
+          <FormLabel required>Status</FormLabel>
           <select
             name="status"
             defaultValue={tenant.status}
+            required
             className="w-full rounded-xl border border-gray-soft bg-white px-3 py-2.5 text-sm outline-none ring-violet/30 focus:ring-2"
           >
             <option value="active">Active</option>
@@ -80,7 +87,7 @@ export function EditTenantForm({ tenant }: { tenant: Tenant }) {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-gray-text">Notes</label>
+        <FormLabel>Notes</FormLabel>
         <textarea
           name="notes"
           rows={3}
@@ -126,7 +133,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-gray-text">{label}</label>
+      <FormLabel required={required}>{label}</FormLabel>
       <input
         name={name}
         type={type}

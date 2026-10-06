@@ -1,6 +1,7 @@
 "use client";
 
 import { createTenant } from "@/app/admin/actions";
+import { FormLabel } from "@/components/admin/FormLabel";
 import { useRouter } from "next/navigation";
 import { FormEvent, useRef, useState } from "react";
 
@@ -39,6 +40,10 @@ export function AddTenantForm({ onDone }: { onDone?: () => void }) {
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
+      <p className="text-xs text-gray-text">
+        Fields marked with <span className="text-red">*</span> are required.
+      </p>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Full name" name="name" required />
         <Field label="Phone" name="phone" />
@@ -68,10 +73,11 @@ export function AddTenantForm({ onDone }: { onDone?: () => void }) {
           placeholder="Consumer / Account ID"
         />
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">Status</label>
+          <FormLabel required>Status</FormLabel>
           <select
             name="status"
             defaultValue="active"
+            required
             className="w-full rounded-xl border border-gray-soft bg-white px-3 py-2.5 text-sm outline-none ring-violet/30 focus:ring-2"
           >
             <option value="active">Active</option>
@@ -81,7 +87,7 @@ export function AddTenantForm({ onDone }: { onDone?: () => void }) {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-gray-text">Notes</label>
+        <FormLabel>Notes</FormLabel>
         <textarea
           name="notes"
           rows={3}
@@ -123,7 +129,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-gray-text">{label}</label>
+      <FormLabel required={required}>{label}</FormLabel>
       <input
         name={name}
         type={type}

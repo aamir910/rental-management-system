@@ -1,6 +1,7 @@
 "use client";
 
 import { createUtilityBill } from "@/app/admin/actions";
+import { FormLabel } from "@/components/admin/FormLabel";
 import type { Tenant } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useRef, useState } from "react";
@@ -66,10 +67,13 @@ export function AddUtilityBillForm({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
+      <p className="text-xs text-gray-text">
+        Fields marked with <span className="text-red">*</span> are required.
+      </p>
       <input type="hidden" name="month" value={month} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">Tenant</label>
+          <FormLabel required>Tenant</FormLabel>
           <select
             name="tenant_id"
             value={tenantId}
@@ -86,15 +90,14 @@ export function AddUtilityBillForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">
-            Utility type
-          </label>
+          <FormLabel required>Utility type</FormLabel>
           <select
             name="utility_type"
             value={utilityType}
             onChange={(e) =>
               setUtilityType(e.target.value as "electricity" | "gas")
             }
+            required
             className="w-full rounded-xl border border-gray-soft bg-white px-3 py-2.5 text-sm outline-none ring-violet/30 focus:ring-2"
           >
             <option value="electricity">Electricity (IESCO)</option>
@@ -103,9 +106,7 @@ export function AddUtilityBillForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">
-            Amount (Rs.)
-          </label>
+          <FormLabel required>Amount (Rs.)</FormLabel>
           <input
             name="amount"
             type="number"
@@ -118,7 +119,7 @@ export function AddUtilityBillForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">Due date</label>
+          <FormLabel>Due date</FormLabel>
           <input
             name="due_date"
             type="date"
@@ -127,9 +128,7 @@ export function AddUtilityBillForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">
-            Reference number
-          </label>
+          <FormLabel>Reference number</FormLabel>
           <input
             key={`${tenantId}-${utilityType}-${autoRef}`}
             name="reference_snapshot"
@@ -140,10 +139,11 @@ export function AddUtilityBillForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">Status</label>
+          <FormLabel required>Status</FormLabel>
           <select
             name="status"
             defaultValue="pending"
+            required
             className="w-full rounded-xl border border-gray-soft bg-white px-3 py-2.5 text-sm outline-none ring-violet/30 focus:ring-2"
           >
             <option value="pending">Pending</option>
@@ -153,7 +153,7 @@ export function AddUtilityBillForm({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-gray-text">Notes</label>
+        <FormLabel>Notes</FormLabel>
         <input
           name="notes"
           className="w-full rounded-xl border border-gray-soft bg-white px-3 py-2.5 text-sm outline-none ring-violet/30 focus:ring-2"

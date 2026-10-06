@@ -1,6 +1,7 @@
 "use client";
 
 import { createReminder } from "@/app/admin/actions";
+import { FormLabel } from "@/components/admin/FormLabel";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -29,9 +30,13 @@ export function AddReminderForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      <p className="text-xs text-gray-text">
+        Fields marked with <span className="text-red">*</span> are required.
+      </p>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">Title</label>
+          <FormLabel required>Title</FormLabel>
           <input
             name="title"
             required
@@ -40,12 +45,11 @@ export function AddReminderForm() {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">
-            Frequency
-          </label>
+          <FormLabel required>Frequency</FormLabel>
           <select
             name="frequency"
             defaultValue="monthly"
+            required
             className="w-full rounded-xl border border-gray-soft bg-white px-3 py-2.5 text-sm outline-none ring-violet/30 focus:ring-2"
           >
             <option value="daily">Daily</option>
@@ -54,9 +58,7 @@ export function AddReminderForm() {
           </select>
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">
-            Next due date
-          </label>
+          <FormLabel required>Next due date</FormLabel>
           <input
             name="next_due_date"
             type="date"
@@ -65,7 +67,7 @@ export function AddReminderForm() {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-medium text-gray-text">Note</label>
+          <FormLabel>Note</FormLabel>
           <textarea
             name="body"
             rows={2}

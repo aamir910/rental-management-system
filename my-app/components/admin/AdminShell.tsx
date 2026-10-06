@@ -102,30 +102,35 @@ export function AdminShell({
         )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-soft bg-white/90 px-4 backdrop-blur sm:px-6">
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-gray-soft bg-white/90 px-3 backdrop-blur sm:h-16 sm:px-6">
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-soft lg:hidden"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-soft lg:hidden"
               onClick={() => setOpen(true)}
               aria-label="Open menu"
             >
               {open ? <X size={18} /> : <Menu size={18} />}
             </button>
 
-            <div className="flex items-center gap-2 text-sm text-gray-text">
-              <Building2 size={16} className="text-violet" />
-              Personal Admin Workspace
+            <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-gray-text">
+              <Building2 size={16} className="shrink-0 text-violet" />
+              <span className="truncate">
+                <span className="sm:hidden">Admin</span>
+                <span className="hidden sm:inline">Personal Admin Workspace</span>
+              </span>
             </div>
 
             <Link
               href="/"
-              className="text-xs font-medium text-violet hover:underline"
+              className="shrink-0 text-xs font-medium text-violet hover:underline"
             >
               View site
             </Link>
           </header>
 
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+          <main className="min-w-0 flex-1 overflow-x-hidden p-3 sm:p-6 lg:p-8">
+            {children}
+          </main>
         </div>
       </div>
     </div>
