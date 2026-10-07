@@ -37,6 +37,55 @@ export function formatDate(isoDate: string | null | undefined) {
   });
 }
 
+/** Format ISO datetime for display time (e.g. 05:30 PM). */
+export function formatTime(iso: string | null | undefined) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleTimeString("en-PK", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** Local YYYY-MM-DD key from an ISO datetime. */
+export function toLocalDateKey(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Label for a calendar day key: Today / Yesterday / formatted date. */
+export function formatDayGroupLabel(dateKey: string) {
+  if (!dateKey) return "—";
+  const today = new Date();
+  const todayKey = toLocalDateKey(today.toISOString());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = toLocalDateKey(yesterday.toISOString());
+  if (dateKey === todayKey) return "Today";
+  if (dateKey === yesterdayKey) return "Yesterday";
+  const d = new Date(`${dateKey}T12:00:00`);
+  return d.toLocaleDateString("en-PK", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** Value for `<input type="datetime-local" />` from Date. */
+export function toDateTimeLocalValue(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${y}-${m}-${d}T${h}:${min}`;
+}
+
 export function remainingAmount(due: number, paid: number) {
   return Math.max(0, Number(due) - Number(paid));
 }

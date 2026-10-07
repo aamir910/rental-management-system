@@ -69,7 +69,13 @@ export function Navbar() {
             href="/login"
             className="text-sm text-gray-muted transition-colors hover:text-white"
           >
-            Admin
+            Sign in
+          </a>
+          <a
+            href="/signup"
+            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+          >
+            Sign up
           </a>
           <a
             href="#features"
@@ -111,13 +117,20 @@ export function Navbar() {
                   {t.nav[link.key]}
                 </a>
               ))}
-              <div className="mt-3 border-t border-white/10 pt-4">
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-white/10 pt-4">
                 <a
-                  href="#features"
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white"
+                >
+                  Sign in
+                </a>
+                <a
+                  href="/signup"
                   onClick={() => setOpen(false)}
                   className="inline-flex rounded-full bg-violet px-4 py-2 text-sm font-medium text-white"
                 >
-                  {t.nav.explore}
+                  Sign up
                 </a>
               </div>
             </div>

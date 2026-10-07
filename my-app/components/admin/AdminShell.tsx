@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut } from "@/app/admin/actions";
+import { PlanBadge } from "@/components/admin/PlanBadge";
 import {
   Building2,
   Home,
@@ -9,6 +10,7 @@ import {
   Menu,
   Receipt,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +22,7 @@ const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/tenants", label: "Tenants", icon: Users },
   { href: "/admin/rents", label: "Monthly Rents", icon: Receipt },
+  { href: "/admin/expenses", label: "Daily Expenses", icon: Wallet },
 ];
 
 export function AdminShell({
@@ -116,8 +119,9 @@ export function AdminShell({
               <Building2 size={16} className="shrink-0 text-violet" />
               <span className="truncate">
                 <span className="sm:hidden">Admin</span>
-                <span className="hidden sm:inline">Personal Admin Workspace</span>
+                <span className="hidden sm:inline">Owner workspace</span>
               </span>
+              <PlanBadge />
             </div>
 
             <Link

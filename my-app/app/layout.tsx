@@ -1,3 +1,4 @@
+import { SessionProvider } from "@/components/auth/SessionProvider";
 import type { Metadata } from "next";
 import { Instrument_Serif, Noto_Nastaliq_Urdu, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
@@ -42,7 +43,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${plusJakarta.variable} ${instrumentSerif.variable} ${notoNastaliq.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full font-sans">{children}</body>
+      <body className="min-h-full font-sans">
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

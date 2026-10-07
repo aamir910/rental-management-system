@@ -12,13 +12,17 @@ const STORAGE_KEY = "yasin-rms-tenants-view";
 
 export function TenantsView({ tenants }: { tenants: Tenant[] }) {
   const { view, changeView } = useViewMode(STORAGE_KEY);
-  const { page, totalPages, pageItems, total, from, to, goTo } =
+  const { page, totalPages, pageItems, total, from, to, pageSize, setPageSize, goTo } =
     usePagination(tenants);
 
   if (tenants.length === 0) {
     return (
       <p className="px-4 py-10 text-center text-sm text-gray-text">
-        No tenants yet. Click <strong>Add Tenant</strong> to create the first one.
+        No tenants yet.{" "}
+        <a href="/admin/tenants/new" className="font-semibold text-violet hover:underline">
+          Add Tenant
+        </a>{" "}
+        to create the first one.
       </p>
     );
   }
@@ -133,7 +137,9 @@ export function TenantsView({ tenants }: { tenants: Tenant[] }) {
         from={from}
         to={to}
         total={total}
+        pageSize={pageSize}
         onPageChange={goTo}
+        onPageSizeChange={setPageSize}
       />
     </div>
   );

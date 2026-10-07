@@ -4,6 +4,7 @@ export function rtkErrorMessage(error: unknown, fallback = "Something went wrong
 
   if ("data" in error) {
     const data = (error as { data?: unknown }).data;
+    if (typeof data === "string") return data;
     if (data && typeof data === "object" && "error" in data) {
       return String((data as { error: string }).error);
     }

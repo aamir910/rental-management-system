@@ -82,3 +82,16 @@ export type Reminder = {
   created_at: string;
   updated_at: string;
 };
+
+export type ExpenseEntryType = "in" | "out";
+
+export type ExpenseEntry = {
+  id: string;
+  entry_type: ExpenseEntryType;
+  amount: number;
+  title: string;
+  notes: string | null;
+  occurred_at: string;
+  created_at: string;
+  updated_at: string;
+};

@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { BILL_CHECK_LINKS } from "@/lib/bill-links";
 import {
   useDeleteUtilityBillMutation,
@@ -9,6 +10,7 @@ import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { UtilityBill, UtilityBillStatus } from "@/lib/types";
 import { formatDate, formatPKR } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
+import { useState } from "react";
 import { InlineSpinner } from "./LoadingState";
 import { PaginationBar, usePagination } from "./Pagination";
 import { StatusBadge } from "./StatusBadge";
@@ -18,7 +20,7 @@ const STORAGE_KEY = "yasin-rms-utility-bills-view";
 
 export function UtilityBillsList({ bills }: { bills: UtilityBill[] }) {
   const { view, changeView } = useViewMode(STORAGE_KEY);
-  const { page, totalPages, pageItems, total, from, to, goTo } =
+  const { page, totalPages, pageItems, total, from, to, pageSize, setPageSize, goTo } =
     usePagination(bills);
 
   if (bills.length === 0) {
@@ -73,7 +75,9 @@ export function UtilityBillsList({ bills }: { bills: UtilityBill[] }) {
         from={from}
         to={to}
         total={total}
+        pageSize={pageSize}
         onPageChange={goTo}
+        onPageSizeChange={setPageSize}
       />
     </div>
   );
@@ -86,6 +90,8 @@ function UtilityBillItem({
   bill: UtilityBill;
   view: "grid" | "list";
 }) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [updateStatus, { isLoading: statusLoading }] =
     useUpdateUtilityBillStatusMutation();
   const [deleteBill, { isLoading: deleteLoading }] =
@@ -104,13 +110,13 @@ function UtilityBillItem({
     }
   }
 
-  async function onDelete() {
-    const ok = window.confirm("Delete this utility bill?");
-    if (!ok) return;
+  async function onConfirm() {
+    setError(null);
     try {
       await deleteBill(bill.id).unwrap();
+      setOpen(false);
     } catch (err) {
-      window.alert(rtkErrorMessage(err, "Failed to delete bill."));
+      setError(rtkErrorMessage(err, "Failed to delete bill."));
     }
   }
 
@@ -158,12 +164,26 @@ function UtilityBillItem({
       <button
         type="button"
         disabled={loading}
-        onClick={onDelete}
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
         className="inline-flex items-center gap-1 rounded-lg border border-red/30 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
       >
         {deleteLoading && <InlineSpinner />}
         Delete
       </button>
+      <ConfirmDialog
+        open={open}
+        title="Delete utility bill?"
+        description={`Remove this ${bill.utility_type} bill for ${bill.tenants?.name || "tenant"} (${formatPKR(bill.amount)}). This cannot be undone.`}
+        loading={deleteLoading}
+        error={error}
+        onCancel={() => {
+          if (!deleteLoading) setOpen(false);
+        }}
+        onConfirm={onConfirm}
+      />
     </div>
   );
 

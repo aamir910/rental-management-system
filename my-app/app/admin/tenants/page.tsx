@@ -1,6 +1,5 @@
 "use client";
 
-import { AddTenantForm } from "@/components/admin/AddTenantForm";
 import {
   ErrorBox,
   FetchingBar,
@@ -9,7 +8,7 @@ import {
 import { TenantsView } from "@/components/admin/TenantsView";
 import { useGetTenantsQuery } from "@/lib/store/api";
 import { rtkErrorMessage } from "@/lib/store/errorMessage";
-import { TenantsPageClient } from "./TenantsPageClient";
+import Link from "next/link";
 
 export default function TenantsPage() {
   const { data: tenants = [], isLoading, isFetching, isError, error } =
@@ -26,21 +25,20 @@ export default function TenantsPage() {
             Manage tenant profiles, property units, and rent amounts.
           </p>
         </div>
-        <TenantsPageClient />
+        <Link
+          href="/admin/tenants/new"
+          className="rounded-xl bg-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-soft"
+        >
+          Add Tenant
+        </Link>
       </div>
 
-      {isError && <ErrorBox message={rtkErrorMessage(error, "Failed to load tenants.")} />}
+      {isError && (
+        <ErrorBox message={rtkErrorMessage(error, "Failed to load tenants.")} />
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-gray-soft bg-white shadow-sm">
         {isLoading ? <SkeletonTable rows={6} /> : <TenantsView tenants={tenants} />}
-      </div>
-
-      <div
-        id="add-tenant"
-        className="rounded-2xl border border-gray-soft bg-white p-5 shadow-sm sm:p-6"
-      >
-        <h2 className="mb-4 text-lg font-semibold text-ink">Add Tenant</h2>
-        <AddTenantForm />
       </div>
     </div>
   );

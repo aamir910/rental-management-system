@@ -73,3 +73,6 @@ create policy "reminders_all_authenticated"
   to authenticated
   using (true)
   with check (true);
+
+-- After dual-backend auth: also run migration_owner_id.sql
+-- so Demo plan rows are scoped by owner_id (Mongo user id string).

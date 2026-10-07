@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
   useDeleteReminderMutation,
   useToggleReminderDoneMutation,
@@ -7,7 +8,7 @@ import {
 import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { Reminder, ReminderFrequency } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { InlineSpinner } from "./LoadingState";
 import { PaginationBar, usePagination } from "./Pagination";
 
@@ -23,7 +24,7 @@ export function RemindersList({ reminders }: { reminders: Reminder[] }) {
     });
   }, [reminders]);
 
-  const { page, totalPages, pageItems, total, from, to, goTo } =
+  const { page, totalPages, pageItems, total, from, to, pageSize, setPageSize, goTo } =
     usePagination(sorted);
 
   const grouped = useMemo(() => {
@@ -77,7 +78,9 @@ export function RemindersList({ reminders }: { reminders: Reminder[] }) {
           from={from}
           to={to}
           total={total}
+          pageSize={pageSize}
           onPageChange={goTo}
+          onPageSizeChange={setPageSize}
         />
       </div>
     </div>
@@ -91,6 +94,8 @@ function ReminderRow({
   reminder: Reminder;
   today: Date;
 }) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [toggleDone, { isLoading: toggleLoading }] =
     useToggleReminderDoneMutation();
   const [removeReminder, { isLoading: deleteLoading }] =
@@ -110,13 +115,13 @@ function ReminderRow({
     }
   }
 
-  async function onDelete() {
-    const ok = window.confirm(`Delete reminder "${reminder.title}"?`);
-    if (!ok) return;
+  async function onConfirm() {
+    setError(null);
     try {
       await removeReminder(reminder.id).unwrap();
+      setOpen(false);
     } catch (err) {
-      window.alert(rtkErrorMessage(err, "Failed to delete reminder."));
+      setError(rtkErrorMessage(err, "Failed to delete reminder."));
     }
   }
 
@@ -158,7 +163,10 @@ function ReminderRow({
           <button
             type="button"
             disabled={loading}
-            onClick={onDelete}
+            onClick={() => {
+              setError(null);
+              setOpen(true);
+            }}
             className="inline-flex items-center gap-1 rounded-lg border border-red/30 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red hover:bg-red/20 disabled:opacity-60"
           >
             {deleteLoading && <InlineSpinner />}
@@ -166,6 +174,18 @@ function ReminderRow({
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={open}
+        title="Delete reminder?"
+        description={`Remove “${reminder.title}”. This cannot be undone.`}
+        loading={deleteLoading}
+        error={error}
+        onCancel={() => {
+          if (!deleteLoading) setOpen(false);
+        }}
+        onConfirm={onConfirm}
+      />
     </div>
   );
 }

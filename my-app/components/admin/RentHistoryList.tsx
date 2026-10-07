@@ -15,7 +15,7 @@ const STORAGE_KEY = "yasin-rms-rent-history-view";
 
 export function RentHistoryList({ history }: { history: RentPayment[] }) {
   const { view, changeView } = useViewMode(STORAGE_KEY);
-  const { page, totalPages, pageItems, total, from, to, goTo } =
+  const { page, totalPages, pageItems, total, from, to, pageSize, setPageSize, goTo } =
     usePagination(history);
 
   if (history.length === 0) {
@@ -124,7 +124,9 @@ export function RentHistoryList({ history }: { history: RentPayment[] }) {
         from={from}
         to={to}
         total={total}
+        pageSize={pageSize}
         onPageChange={goTo}
+        onPageSizeChange={setPageSize}
       />
     </div>
   );

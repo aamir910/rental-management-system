@@ -12,6 +12,7 @@ create table if not exists public.profiles (
 -- Tenants
 create table if not exists public.tenants (
   id uuid primary key default gen_random_uuid(),
+  owner_id text,
   name text not null,
   phone text,
   cnic text,
@@ -29,6 +30,7 @@ create table if not exists public.tenants (
 -- Monthly rent payments
 create table if not exists public.rent_payments (
   id uuid primary key default gen_random_uuid(),
+  owner_id text,
   tenant_id uuid not null references public.tenants (id) on delete cascade,
   billing_month date not null,
   amount_due numeric(12, 2) not null default 0,
@@ -50,6 +52,9 @@ create index if not exists rent_payments_tenant_id_idx
 
 create index if not exists tenants_status_idx
   on public.tenants (status);
+
+create index if not exists tenants_owner_id_idx on public.tenants (owner_id);
+create index if not exists rent_payments_owner_id_idx on public.rent_payments (owner_id);
 
 -- Auto-create profile on signup
 create or replace function public.handle_new_user()
@@ -170,6 +175,7 @@ grant execute on function public.generate_monthly_rents(date) to authenticated;
 -- Utility bills (gas / electricity per tenant per month)
 create table if not exists public.utility_bills (
   id uuid primary key default gen_random_uuid(),
+  owner_id text,
   tenant_id uuid not null references public.tenants (id) on delete cascade,
   utility_type text not null check (utility_type in ('electricity', 'gas')),
   billing_month date not null,
@@ -192,6 +198,7 @@ create index if not exists utility_bills_tenant_id_idx
 -- Admin reminder notes
 create table if not exists public.reminders (
   id uuid primary key default gen_random_uuid(),
+  owner_id text,
   title text not null,
   body text,
   frequency text not null check (frequency in ('daily', 'weekly', 'monthly')),
@@ -203,6 +210,9 @@ create table if not exists public.reminders (
 
 create index if not exists reminders_next_due_date_idx
   on public.reminders (next_due_date);
+
+create index if not exists utility_bills_owner_id_idx on public.utility_bills (owner_id);
+create index if not exists reminders_owner_id_idx on public.reminders (owner_id);
 
 drop trigger if exists utility_bills_set_updated_at on public.utility_bills;
 create trigger utility_bills_set_updated_at
