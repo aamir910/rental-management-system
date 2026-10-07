@@ -2,15 +2,18 @@
 
 import { FormLabel } from "@/components/admin/FormLabel";
 import { InlineSpinner } from "@/components/admin/LoadingState";
+import { PaymentChannelFields } from "@/components/admin/PaymentChannelFields";
 import { formDataToValues, useCreateExpenseMutation } from "@/lib/store/api";
 import { rtkErrorMessage } from "@/lib/store/errorMessage";
-import type { ExpenseEntryType } from "@/lib/types";
+import type { AccountProvider, ExpenseEntryType, PaymentChannel } from "@/lib/types";
 import { toDateTimeLocalValue } from "@/lib/utils";
 import { FormEvent, useState } from "react";
 
 export function AddExpenseForm() {
   const [error, setError] = useState<string | null>(null);
   const [entryType, setEntryType] = useState<ExpenseEntryType>("out");
+  const [channel, setChannel] = useState<PaymentChannel>("cash");
+  const [provider, setProvider] = useState<AccountProvider | "">("");
   const [createExpense, { isLoading }] = useCreateExpenseMutation();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -18,12 +21,21 @@ export function AddExpenseForm() {
     const form = e.currentTarget;
     setError(null);
 
+    if (channel === "account" && !provider) {
+      setError("Select an account (EasyPaisa, UBL, Meezan, …).");
+      return;
+    }
+
     try {
       const values = formDataToValues(new FormData(form));
       values.entry_type = entryType;
+      values.payment_channel = channel;
+      values.account_provider = provider;
       await createExpense(values).unwrap();
       form.reset();
       setEntryType("out");
+      setChannel("cash");
+      setProvider("");
       const dt = form.elements.namedItem("occurred_at") as HTMLInputElement | null;
       if (dt) dt.value = toDateTimeLocalValue();
     } catch (err) {
@@ -49,7 +61,7 @@ export function AddExpenseForm() {
                 : "border-gray-soft bg-white text-gray-text hover:border-emerald/30"
             }`}
           >
-            Cash In
+            In
           </button>
           <button
             type="button"
@@ -60,11 +72,24 @@ export function AddExpenseForm() {
                 : "border-gray-soft bg-white text-gray-text hover:border-red/30"
             }`}
           >
-            Cash Out
+            Out
           </button>
         </div>
         <input type="hidden" name="entry_type" value={entryType} />
       </div>
+
+      <PaymentChannelFields
+        channel={channel}
+        provider={provider}
+        channelLabel="Cash or account"
+        onChannelChange={(next) => {
+          setChannel(next);
+          if (next === "cash") setProvider("");
+        }}
+        onProviderChange={setProvider}
+      />
+      <input type="hidden" name="payment_channel" value={channel} />
+      <input type="hidden" name="account_provider" value={provider} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -124,8 +149,8 @@ export function AddExpenseForm() {
         {isLoading
           ? "Saving…"
           : entryType === "in"
-            ? "Add cash in"
-            : "Add cash out"}
+            ? "Add money in"
+            : "Add money out"}
       </button>
     </form>
   );

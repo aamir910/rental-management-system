@@ -8,6 +8,15 @@ create table if not exists public.daily_expenses (
   amount numeric(12, 2) not null check (amount >= 0),
   title text not null,
   notes text,
+  payment_channel text not null default 'cash'
+    check (payment_channel in ('cash', 'account')),
+  account_provider text
+    check (
+      account_provider is null
+      or account_provider in (
+        'easypaisa', 'jazzcash', 'ubl', 'meezan', 'askari', 'alfalah', 'hbl', 'other'
+      )
+    ),
   occurred_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

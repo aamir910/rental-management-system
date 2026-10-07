@@ -1,8 +1,11 @@
+import type { AccountProvider, PaymentChannel } from "@/lib/payment-channels";
+
 export type TenantStatus = "active" | "inactive";
 export type RentStatus = "pending" | "partial" | "paid" | "overdue";
 export type UtilityType = "electricity" | "gas";
 export type UtilityBillStatus = "pending" | "success";
 export type ReminderFrequency = "daily" | "weekly" | "monthly";
+export type { AccountProvider, PaymentChannel };
 
 export type Profile = {
   id: string;
@@ -35,6 +38,8 @@ export type RentPayment = {
   amount_paid: number;
   due_date: string;
   status: RentStatus;
+  payment_channel: PaymentChannel | null;
+  account_provider: AccountProvider | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -91,6 +96,8 @@ export type ExpenseEntry = {
   amount: number;
   title: string;
   notes: string | null;
+  payment_channel: PaymentChannel;
+  account_provider: AccountProvider | null;
   occurred_at: string;
   created_at: string;
   updated_at: string;

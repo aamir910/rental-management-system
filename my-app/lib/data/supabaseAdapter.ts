@@ -9,6 +9,7 @@ import type {
   UtilityBillStatus,
   UtilityType,
 } from "@/lib/types";
+import { normalizePaymentFields } from "@/lib/payment-channels";
 import { monthInputToBillingDate } from "@/lib/utils";
 import type { AdapterContext, DataAdapter, FormValues } from "./types";
 import {
@@ -152,6 +153,16 @@ export function createSupabaseAdapter(ctx: AdapterContext): DataAdapter {
       };
       if (data.due_date !== undefined) patch.due_date = data.due_date;
       if (data.notes !== undefined) patch.notes = data.notes;
+      if (data.payment_channel !== undefined) {
+        patch.payment_channel =
+          amountPaid > 0 ? data.payment_channel : null;
+      }
+      if (data.account_provider !== undefined) {
+        patch.account_provider =
+          amountPaid > 0 && data.payment_channel === "account"
+            ? data.account_provider
+            : null;
+      }
 
       const { error } = await client
         .from("rent_payments")
@@ -351,6 +362,7 @@ export function createSupabaseAdapter(ctx: AdapterContext): DataAdapter {
       const amount = Number(values.amount || 0);
       const notes = String(values.notes || "").trim() || null;
       const occurredAt = parseExpenseOccurredAt(String(values.occurred_at || ""));
+      const { payment_channel, account_provider } = normalizePaymentFields(values);
       if (!["in", "out"].includes(entryType)) {
         throw new Error("Choose Cash In or Cash Out.");
       }
@@ -362,6 +374,8 @@ export function createSupabaseAdapter(ctx: AdapterContext): DataAdapter {
         amount,
         title,
         notes,
+        payment_channel,
+        account_provider,
         occurred_at: occurredAt,
       });
       if (error) throw new Error(error.message);
@@ -385,6 +399,8 @@ function mapExpenseRow(row: Record<string, unknown>): ExpenseEntry {
     amount: Number(row.amount),
     title: String(row.title),
     notes: (row.notes as string | null) ?? null,
+    payment_channel: row.payment_channel === "account" ? "account" : "cash",
+    account_provider: (row.account_provider as ExpenseEntry["account_provider"]) ?? null,
     occurred_at: String(row.occurred_at),
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),

@@ -19,6 +19,7 @@ import {
   monthRangeIso,
   parseExpenseOccurredAt,
 } from "@/lib/data/types";
+import { normalizePaymentFields } from "@/lib/payment-channels";
 
 export type FormValues = Record<string, string>;
 
@@ -397,6 +398,8 @@ export const api = createApi({
         due_date?: string;
         status?: RentStatus;
         notes?: string | null;
+        payment_channel?: "cash" | "account" | null;
+        account_provider?: string | null;
       }
     >({
       async queryFn({ rentId, ...data }) {
@@ -427,6 +430,16 @@ export const api = createApi({
             };
             if (data.due_date !== undefined) patch.due_date = data.due_date;
             if (data.notes !== undefined) patch.notes = data.notes;
+            if (data.payment_channel !== undefined) {
+              patch.payment_channel =
+                amountPaid > 0 ? data.payment_channel : null;
+            }
+            if (data.account_provider !== undefined) {
+              patch.account_provider =
+                amountPaid > 0 && data.payment_channel === "account"
+                  ? data.account_provider
+                  : null;
+            }
 
             const { error } = await supabase
               .from("rent_payments")
@@ -444,7 +457,7 @@ export const api = createApi({
           return toError(err instanceof Error ? err.message : "Failed to update rent.");
         }
       },
-      invalidatesTags: ["Rents"],
+      invalidatesTags: ["Rents", "Expenses"],
     }),
 
     generateMonthRents: builder.mutation<
@@ -693,6 +706,11 @@ export const api = createApi({
                 amount: Number(row.amount),
                 title: String(row.title),
                 notes: (row.notes as string | null) ?? null,
+                payment_channel:
+                  row.payment_channel === "account" ? "account" : "cash",
+                account_provider:
+                  (row.account_provider as ExpenseEntry["account_provider"]) ??
+                  null,
                 occurred_at: String(row.occurred_at),
                 created_at: String(row.created_at),
                 updated_at: String(row.updated_at),
@@ -735,6 +753,17 @@ export const api = createApi({
               err instanceof Error ? err.message : "Invalid date and time."
             );
           }
+          let payment_channel: string;
+          let account_provider: string | null;
+          try {
+            const parsed = normalizePaymentFields(values);
+            payment_channel = parsed.payment_channel;
+            account_provider = parsed.account_provider;
+          } catch (err) {
+            return toError(
+              err instanceof Error ? err.message : "Invalid payment channel."
+            );
+          }
           if (isDemoPlan()) {
             const supabase = createClient();
             const { error } = await supabase.from("daily_expenses").insert({
@@ -742,6 +771,8 @@ export const api = createApi({
               amount,
               title,
               notes,
+              payment_channel,
+              account_provider,
               occurred_at: occurredAt,
             });
             if (error) return toError(error.message);
@@ -754,6 +785,8 @@ export const api = createApi({
               amount: String(amount),
               title,
               notes: notes ?? "",
+              payment_channel,
+              account_provider: account_provider ?? "",
               occurred_at: occurredAt,
             }),
           });

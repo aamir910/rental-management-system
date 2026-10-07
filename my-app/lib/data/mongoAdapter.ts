@@ -10,6 +10,7 @@ import type {
   UtilityBillStatus,
   UtilityType,
 } from "@/lib/types";
+import { normalizePaymentFields } from "@/lib/payment-channels";
 import { monthInputToBillingDate } from "@/lib/utils";
 import { ObjectId } from "mongodb";
 import type { AdapterContext, DataAdapter, FormValues } from "./types";
@@ -179,6 +180,14 @@ export function createMongoAdapter(ctx: AdapterContext): DataAdapter {
           amount_paid: Number(r.amount_paid),
           due_date: String(r.due_date),
           status: r.status as RentStatus,
+          payment_channel:
+            r.payment_channel === "account"
+              ? "account"
+              : r.payment_channel === "cash"
+                ? "cash"
+                : null,
+          account_provider:
+            (r.account_provider as RentPayment["account_provider"]) ?? null,
           notes: (r.notes as string | null) ?? null,
           created_at: (r.created_at as Date).toISOString(),
           updated_at: (r.updated_at as Date).toISOString(),
@@ -213,6 +222,14 @@ export function createMongoAdapter(ctx: AdapterContext): DataAdapter {
             amount_paid: Number(r.amount_paid),
             due_date: String(r.due_date),
             status: r.status as RentStatus,
+            payment_channel:
+              r.payment_channel === "account"
+                ? "account"
+                : r.payment_channel === "cash"
+                  ? "cash"
+                  : null,
+            account_provider:
+              (r.account_provider as RentPayment["account_provider"]) ?? null,
             notes: (r.notes as string | null) ?? null,
             created_at: (r.created_at as Date).toISOString(),
             updated_at: (r.updated_at as Date).toISOString(),
@@ -242,6 +259,16 @@ export function createMongoAdapter(ctx: AdapterContext): DataAdapter {
       };
       if (data.due_date !== undefined) patch.due_date = data.due_date;
       if (data.notes !== undefined) patch.notes = data.notes;
+      if (data.payment_channel !== undefined) {
+        patch.payment_channel =
+          amountPaid > 0 ? data.payment_channel : null;
+      }
+      if (data.account_provider !== undefined) {
+        patch.account_provider =
+          amountPaid > 0 && data.payment_channel === "account"
+            ? data.account_provider
+            : null;
+      }
 
       await db
         .collection(COLLECTIONS.rentPayments)
@@ -490,6 +517,9 @@ export function createMongoAdapter(ctx: AdapterContext): DataAdapter {
             amount: Number(r.amount),
             title: String(r.title),
             notes: (r.notes as string | null) ?? null,
+            payment_channel: r.payment_channel === "account" ? "account" : "cash",
+            account_provider:
+              (r.account_provider as ExpenseEntry["account_provider"]) ?? null,
             occurred_at:
               r.occurred_at instanceof Date
                 ? r.occurred_at.toISOString()
@@ -506,6 +536,7 @@ export function createMongoAdapter(ctx: AdapterContext): DataAdapter {
       const amount = Number(values.amount || 0);
       const notes = String(values.notes || "").trim() || null;
       const occurredAt = parseExpenseOccurredAt(String(values.occurred_at || ""));
+      const { payment_channel, account_provider } = normalizePaymentFields(values);
       if (!["in", "out"].includes(entryType)) {
         throw new Error("Choose Cash In or Cash Out.");
       }
@@ -520,6 +551,8 @@ export function createMongoAdapter(ctx: AdapterContext): DataAdapter {
         amount,
         title,
         notes,
+        payment_channel,
+        account_provider,
         occurred_at: new Date(occurredAt),
         created_at: now,
         updated_at: now,

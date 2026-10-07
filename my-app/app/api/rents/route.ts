@@ -25,6 +25,8 @@ export async function PATCH(request: Request) {
         due_date: body.due_date,
         status: body.status,
         notes: body.notes,
+        payment_channel: body.payment_channel,
+        account_provider: body.account_provider,
       });
       return { success: true as const };
     });

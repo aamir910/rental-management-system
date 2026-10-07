@@ -1,9 +1,16 @@
 "use client";
 
 import { InlineSpinner } from "@/components/admin/LoadingState";
+import { PaymentChannelFields } from "@/components/admin/PaymentChannelFields";
 import { useUpdateRentPaymentMutation } from "@/lib/store/api";
 import { rtkErrorMessage } from "@/lib/store/errorMessage";
-import type { RentPayment, RentStatus } from "@/lib/types";
+import type {
+  AccountProvider,
+  PaymentChannel,
+  RentPayment,
+  RentStatus,
+} from "@/lib/types";
+import { paymentChannelLabel } from "@/lib/payment-channels";
 import { formatPKR, remainingAmount } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
@@ -21,28 +28,54 @@ export function RentRowEditor({
   const [amountPaid, setAmountPaid] = useState(String(rent.amount_paid ?? 0));
   const [dueDate, setDueDate] = useState(rent.due_date);
   const [status, setStatus] = useState<RentStatus>(rent.status);
+  const [channel, setChannel] = useState<PaymentChannel>(
+    rent.payment_channel ?? "cash"
+  );
+  const [provider, setProvider] = useState<AccountProvider | "">(
+    rent.account_provider ?? ""
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [updateRent, { isLoading: saving }] = useUpdateRentPaymentMutation();
 
-  const remaining = remainingAmount(
-    Number(rent.amount_due),
-    Number(amountPaid || 0)
-  );
+  const paidNum = Number(amountPaid || 0);
+  const remaining = remainingAmount(Number(rent.amount_due), paidNum);
 
   async function save() {
     setMessage(null);
+    if (paidNum > 0 && channel === "account" && !provider) {
+      setMessage("Select an account for rent in account.");
+      return;
+    }
     try {
       await updateRent({
         rentId: rent.id,
-        amount_paid: Number(amountPaid || 0),
+        amount_paid: paidNum,
         due_date: dueDate,
         status,
+        payment_channel: paidNum > 0 ? channel : null,
+        account_provider:
+          paidNum > 0 && channel === "account" ? provider || null : null,
       }).unwrap();
       setMessage("Saved");
     } catch (err) {
       setMessage(rtkErrorMessage(err, "Save failed."));
     }
   }
+
+  const channelFields =
+    paidNum > 0 ? (
+      <PaymentChannelFields
+        channel={channel}
+        provider={provider}
+        channelLabel="Rent via"
+        onChannelChange={(next) => {
+          setChannel(next);
+          if (next === "cash") setProvider("");
+        }}
+        onProviderChange={setProvider}
+        compact
+      />
+    ) : null;
 
   const fields = (
     <>
@@ -83,6 +116,7 @@ export function RentRowEditor({
           <option value="overdue">Overdue</option>
         </select>
       </label>
+      {channelFields ? <div className="sm:col-span-3">{channelFields}</div> : null}
     </>
   );
 
@@ -141,6 +175,12 @@ export function RentRowEditor({
           </div>
         </div>
 
+        {rent.payment_channel && Number(rent.amount_paid) > 0 ? (
+          <p className="mt-2 text-xs text-gray-text">
+            Via {paymentChannelLabel(rent.payment_channel, rent.account_provider)}
+          </p>
+        ) : null}
+
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">{fields}</div>
         <div className="mt-4">{actions}</div>
       </article>
@@ -152,6 +192,11 @@ export function RentRowEditor({
       <td className="px-4 py-3">
         <p className="font-medium text-ink">{rent.tenants?.name ?? "—"}</p>
         <p className="text-xs text-gray-text">{rent.tenants?.property_unit}</p>
+        {rent.payment_channel && Number(rent.amount_paid) > 0 ? (
+          <p className="mt-0.5 text-[11px] text-violet">
+            {paymentChannelLabel(rent.payment_channel, rent.account_provider)}
+          </p>
+        ) : null}
       </td>
       <td className="px-4 py-3 text-sm">{formatPKR(rent.amount_due)}</td>
       <td className="px-4 py-3">
@@ -161,6 +206,7 @@ export function RentRowEditor({
           onChange={(e) => setAmountPaid(e.target.value)}
           className="w-28 rounded-lg border border-gray-soft px-2 py-1.5 text-sm outline-none ring-violet/30 focus:ring-2"
         />
+        <div className="mt-2 w-44">{channelFields}</div>
       </td>
       <td className="px-4 py-3 text-sm font-medium text-amber">
         {formatPKR(remaining)}

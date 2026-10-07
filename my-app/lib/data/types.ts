@@ -1,5 +1,7 @@
 import type {
+  AccountProvider,
   ExpenseEntry,
+  PaymentChannel,
   Reminder,
   ReminderFrequency,
   RentPayment,
@@ -33,6 +35,8 @@ export type DataAdapter = {
       due_date?: string;
       status?: RentStatus;
       notes?: string | null;
+      payment_channel?: PaymentChannel | null;
+      account_provider?: AccountProvider | null;
     }
   ): Promise<void>;
   generateMonthRents(monthValue: string): Promise<number>;

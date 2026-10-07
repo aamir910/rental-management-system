@@ -10,6 +10,7 @@ import {
 import { useDeleteExpenseMutation } from "@/lib/store/api";
 import { rtkErrorMessage } from "@/lib/store/errorMessage";
 import type { ExpenseEntry } from "@/lib/types";
+import { paymentChannelLabel } from "@/lib/payment-channels";
 import {
   formatDayGroupLabel,
   formatPKR,
@@ -131,6 +132,12 @@ function ExpenseCard({ entry }: { entry: ExpenseEntry }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <TypeChip type={entry.entry_type} />
+            <span className="rounded-lg border border-gray-soft bg-surface/60 px-2 py-0.5 text-[11px] font-medium text-gray-text">
+              {paymentChannelLabel(
+                entry.payment_channel,
+                entry.account_provider
+              )}
+            </span>
             <span className="text-[11px] text-gray-text">
               {formatTime(entry.occurred_at)}
             </span>
@@ -168,6 +175,8 @@ function ExpenseRow({ entry }: { entry: ExpenseEntry }) {
         <p className="truncate text-sm font-semibold text-ink">{entry.title}</p>
         <p className="text-[11px] text-gray-text">
           {formatTime(entry.occurred_at)}
+          {" · "}
+          {paymentChannelLabel(entry.payment_channel, entry.account_provider)}
           {entry.notes ? ` · ${entry.notes}` : ""}
         </p>
       </div>
