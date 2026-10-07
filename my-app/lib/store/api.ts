@@ -45,6 +45,19 @@ function toError(message: string): { error: ApiError } {
   return { error: { status: "CUSTOM_ERROR", error: message } };
 }
 
+/** Demo plan: require Supabase Auth user and scope all queries by owner_id. */
+async function requireDemoOwner() {
+  const supabase = createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error("Not signed in to Demo.");
+  }
+  return { supabase, ownerId: user.id, user };
+}
+
 function tenantPayloadFromValues(values: FormValues) {
   return {
     name: String(values.name || "").trim(),
@@ -100,15 +113,11 @@ export const api = createApi({
       async queryFn() {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
-            const {
-              data: { user },
-              error: userError,
-            } = await supabase.auth.getUser();
-            if (userError || !user) return toError("Not signed in to Demo.");
+            const { supabase, ownerId, user } = await requireDemoOwner();
             const { count, error } = await supabase
               .from("tenants")
-              .select("id", { count: "exact", head: true });
+              .select("id", { count: "exact", head: true })
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return {
               data: {
@@ -133,10 +142,11 @@ export const api = createApi({
       async queryFn() {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { data, error } = await supabase
               .from("tenants")
               .select("*")
+              .eq("owner_id", ownerId)
               .order("created_at", { ascending: false });
             if (error) return toError(error.message);
             return { data: (data ?? []) as Tenant[] };
@@ -160,10 +170,11 @@ export const api = createApi({
       async queryFn() {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { data, error } = await supabase
               .from("tenants")
               .select("*")
+              .eq("owner_id", ownerId)
               .eq("status", "active")
               .order("name", { ascending: true });
             if (error) return toError(error.message);
@@ -182,11 +193,12 @@ export const api = createApi({
       async queryFn(id) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { data, error } = await supabase
               .from("tenants")
               .select("*")
               .eq("id", id)
+              .eq("owner_id", ownerId)
               .single();
             if (error) return toError(error.message);
             return { data: data as Tenant };
@@ -204,13 +216,14 @@ export const api = createApi({
       async queryFn(month) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const billingMonth = monthInputToBillingDate(month);
             const { data, error } = await supabase
               .from("rent_payments")
               .select(
                 "*, tenants(id, name, property_unit, phone, monthly_rent, status)"
               )
+              .eq("owner_id", ownerId)
               .eq("billing_month", billingMonth)
               .order("due_date", { ascending: true });
             if (error) return toError(error.message);
@@ -234,10 +247,11 @@ export const api = createApi({
       async queryFn(tenantId) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { data, error } = await supabase
               .from("rent_payments")
               .select("*")
+              .eq("owner_id", ownerId)
               .eq("tenant_id", tenantId)
               .order("billing_month", { ascending: false });
             if (error) return toError(error.message);
@@ -260,13 +274,14 @@ export const api = createApi({
       async queryFn(month) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const billingMonth = monthInputToBillingDate(month);
             const { data, error } = await supabase
               .from("utility_bills")
               .select(
                 "*, tenants(id, name, property_unit, electricity_ref, gas_ref)"
               )
+              .eq("owner_id", ownerId)
               .eq("billing_month", billingMonth)
               .order("created_at", { ascending: false });
             if (error) return toError(error.message);
@@ -290,10 +305,11 @@ export const api = createApi({
       async queryFn() {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { data, error } = await supabase
               .from("reminders")
               .select("*")
+              .eq("owner_id", ownerId)
               .order("next_due_date", { ascending: true });
             if (error) return toError(error.message);
             return { data: (data ?? []) as Reminder[] };
@@ -315,16 +331,19 @@ export const api = createApi({
             return toError("Name and property/unit are required.");
           }
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { count } = await supabase
               .from("tenants")
-              .select("id", { count: "exact", head: true });
+              .select("id", { count: "exact", head: true })
+              .eq("owner_id", ownerId);
             if ((count ?? 0) >= DEMO_TENANT_LIMIT) {
               return toError(
                 `Demo plan is limited to ${DEMO_TENANT_LIMIT} tenants. Upgrade to Paid.`
               );
             }
-            const { error } = await supabase.from("tenants").insert(payload);
+            const { error } = await supabase
+              .from("tenants")
+              .insert({ ...payload, owner_id: ownerId });
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -345,11 +364,12 @@ export const api = createApi({
         try {
           const payload = tenantPayloadFromValues(values);
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase
               .from("tenants")
               .update(payload)
-              .eq("id", tenantId);
+              .eq("id", tenantId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -373,11 +393,12 @@ export const api = createApi({
       async queryFn(tenantId) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase
               .from("tenants")
               .delete()
-              .eq("id", tenantId);
+              .eq("id", tenantId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -405,11 +426,12 @@ export const api = createApi({
       async queryFn({ rentId, ...data }) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { data: current, error: fetchError } = await supabase
               .from("rent_payments")
               .select("amount_due, amount_paid")
               .eq("id", rentId)
+              .eq("owner_id", ownerId)
               .single();
             if (fetchError) return toError(fetchError.message);
 
@@ -444,7 +466,8 @@ export const api = createApi({
             const { error } = await supabase
               .from("rent_payments")
               .update(patch)
-              .eq("id", rentId);
+              .eq("id", rentId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -467,13 +490,32 @@ export const api = createApi({
       async queryFn(month) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const billingMonth = monthInputToBillingDate(month);
-            const { data, error } = await supabase.rpc("generate_monthly_rents", {
-              p_billing_month: billingMonth,
-            });
-            if (error) return toError(error.message);
-            return { data: { success: true, created: (data as number) ?? 0 } };
+            const [y, m] = billingMonth.split("-").map(Number);
+            const dueDate = `${y}-${String(m).padStart(2, "0")}-05`;
+            const { data: active, error: tenantsError } = await supabase
+              .from("tenants")
+              .select("id, monthly_rent")
+              .eq("owner_id", ownerId)
+              .eq("status", "active");
+            if (tenantsError) return toError(tenantsError.message);
+
+            let created = 0;
+            for (const t of active ?? []) {
+              const { error } = await supabase.from("rent_payments").insert({
+                owner_id: ownerId,
+                tenant_id: t.id,
+                billing_month: billingMonth,
+                amount_due: Number(t.monthly_rent) || 0,
+                amount_paid: 0,
+                due_date: dueDate,
+                status: "pending",
+              });
+              if (!error) created += 1;
+              // ignore unique conflicts (already generated)
+            }
+            return { data: { success: true, created } };
           }
           const data = await apiFetch<{ success: true; created: number }>(
             "/rents/generate",
@@ -510,7 +552,7 @@ export const api = createApi({
               return toError("Invalid utility type.");
             }
 
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const billingMonth = monthInputToBillingDate(monthValue);
             let ref = referenceSnapshot;
             if (!ref) {
@@ -518,6 +560,7 @@ export const api = createApi({
                 .from("tenants")
                 .select("electricity_ref, gas_ref")
                 .eq("id", tenantId)
+                .eq("owner_id", ownerId)
                 .single();
               ref =
                 utilityType === "electricity"
@@ -525,6 +568,7 @@ export const api = createApi({
                   : tenant?.gas_ref ?? null;
             }
             const { error } = await supabase.from("utility_bills").insert({
+              owner_id: ownerId,
               tenant_id: tenantId,
               utility_type: utilityType,
               billing_month: billingMonth,
@@ -556,11 +600,12 @@ export const api = createApi({
       async queryFn({ billId, status }) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase
               .from("utility_bills")
               .update({ status })
-              .eq("id", billId);
+              .eq("id", billId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -580,11 +625,12 @@ export const api = createApi({
       async queryFn(billId) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase
               .from("utility_bills")
               .delete()
-              .eq("id", billId);
+              .eq("id", billId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -613,8 +659,9 @@ export const api = createApi({
             if (!["daily", "weekly", "monthly"].includes(frequency)) {
               return toError("Invalid frequency.");
             }
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase.from("reminders").insert({
+              owner_id: ownerId,
               title,
               body,
               frequency,
@@ -643,11 +690,12 @@ export const api = createApi({
       async queryFn({ reminderId, isDone }) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase
               .from("reminders")
               .update({ is_done: isDone })
-              .eq("id", reminderId);
+              .eq("id", reminderId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -667,11 +715,12 @@ export const api = createApi({
       async queryFn(reminderId) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase
               .from("reminders")
               .delete()
-              .eq("id", reminderId);
+              .eq("id", reminderId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
@@ -691,10 +740,11 @@ export const api = createApi({
         try {
           if (isDemoPlan()) {
             const { start, end } = monthRangeIso(month);
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { data, error } = await supabase
               .from("daily_expenses")
               .select("*")
+              .eq("owner_id", ownerId)
               .gte("occurred_at", start)
               .lt("occurred_at", end)
               .order("occurred_at", { ascending: false });
@@ -765,8 +815,9 @@ export const api = createApi({
             );
           }
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase.from("daily_expenses").insert({
+              owner_id: ownerId,
               entry_type: entryType,
               amount,
               title,
@@ -804,11 +855,12 @@ export const api = createApi({
       async queryFn(expenseId) {
         try {
           if (isDemoPlan()) {
-            const supabase = createClient();
+            const { supabase, ownerId } = await requireDemoOwner();
             const { error } = await supabase
               .from("daily_expenses")
               .delete()
-              .eq("id", expenseId);
+              .eq("id", expenseId)
+              .eq("owner_id", ownerId);
             if (error) return toError(error.message);
             return { data: { success: true } };
           }
